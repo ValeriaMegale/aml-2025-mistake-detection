@@ -7,8 +7,6 @@ import wandb
 from torch import optim, nn
 from torch.utils.data import DataLoader
 
-from analysis.results.FirebaseService import FirebaseService
-from analysis.results.Result import Metrics, ResultDetails, Result
 from constants import Constants as const
 import numpy as np
 import torch
@@ -21,8 +19,6 @@ from core.models.er_former import ErFormer
 from dataloader.CaptainCookStepDataset import collate_fn, CaptainCookStepDataset
 from dataloader.CaptainCookSubStepDataset import CaptainCookSubStepDataset
 
-db_service = FirebaseService()
-
 
 def fetch_model_name(config):
     if config.task_name == const.ERROR_CATEGORY_RECOGNITION:
@@ -30,7 +26,7 @@ def fetch_model_name(config):
     elif config.task_name in  [const.EARLY_ERROR_RECOGNITION, const.ERROR_RECOGNITION]:
         if config.model_name is None:
             if config.backbone in [const.RESNET3D, const.X3D, const.SLOWFAST, const.OMNIVORE]:
-                config.model_name = f"{config.task_name}_{config.split}_{config.backbone}_{config.variant}_{config.modality}"
+                config.model_name = f"{config.task_name}_{config.split}_{config.backbone}_{config.variant}_{config.modality[0]}"
             elif config.backbone == const.IMAGEBIND:
                 combined_modality_name = '_'.join(config.modality)
                 config.model_name = f"{config.task_name}_{config.split}_{config.backbone}_{config.variant}_{combined_modality_name}"
@@ -102,29 +98,10 @@ def save_results_to_csv(config, sub_step_metrics, step_metrics, step_normalizati
         writer.writerow(collated_stats)
 
 
-def save_results_to_firebase(config, sub_step_metrics, step_metrics):
-    sub_step_metrics = Metrics.from_dict(sub_step_metrics)
-    step_metrics = Metrics.from_dict(step_metrics)
-    result_details = ResultDetails(sub_step_metrics, step_metrics)
-    result = Result(
-        task_name=config.task_name,
-        variant=config.variant,
-        backbone=config.backbone,
-        split=config.split,
-        model_name=config.model_name,
-        modality=config.modality
-    )
-
-    result.add_result_details(result_details)
-    db_service.update_result(result.result_id, result.to_dict())
-
-
 def save_results(config, sub_step_metrics, step_metrics, step_normalization=False, sub_step_normalization=False,
                  threshold=0.5):
     # 1. Save evaluation results to csv
     save_results_to_csv(config, sub_step_metrics, step_metrics, step_normalization, sub_step_normalization, threshold)
-    # 2. Save evaluation results to firebase
-    # save_results_to_firebase(config, sub_step_metrics, step_metrics)
 
 
 def store_model(model, config, ckpt_name: str):
@@ -176,8 +153,7 @@ def train_model_base(train_loader, val_loader, config, test_loader=None):
     model = fetch_model(config)
     device = config.device
     optimizer = optim.Adam(model.parameters(), lr=config.lr, weight_decay=config.weight_decay)
-    # criterion = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([2.5], dtype=torch.float32).to(device))
-    criterion = nn.BCEWithLogitsLoss()
+    criterion = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([2.5], dtype=torch.float32).to(device))
     scheduler = ReduceLROnPlateau(
         optimizer, mode='max',
         factor=0.1, patience=5, verbose=True,
@@ -292,7 +268,7 @@ def train_step_test_step_dataset_base(config):
         "num_workers": 8,
         "pin_memory": False,
     }
-    train_kwargs = {**cuda_kwargs, "shuffle": True, "batch_size": 1}
+    train_kwargs = {**cuda_kwargs, "shuffle": True, "batch_size": config.batch_size}
     test_kwargs = {**cuda_kwargs, "shuffle": False, "batch_size": 1}
 
     print("-------------------------------------------------------------")
@@ -344,8 +320,8 @@ def train_sub_step_test_step_dataset_base(config):
 # ----------------------- TEST BASE FILES -----------------------
 
 
-def test_er_model(model, test_loader, criterion, device, phase, step_normalization=False, sub_step_normalization=False,
-                  threshold=0.5):
+def test_er_model(model, test_loader, criterion, device, phase, step_normalization=True, sub_step_normalization=True,
+                  threshold=0.6):
     total_samples = 0
     all_targets = []
     all_outputs = []
