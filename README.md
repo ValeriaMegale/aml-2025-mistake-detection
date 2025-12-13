@@ -2,7 +2,7 @@
 
 ## Environment Setup
 
-First of all, create a python environment with
+First of all, create a python environment with 
 
 ```
 python -m venv .venv
@@ -12,13 +12,9 @@ pip install -r requirements.txt
 Then, download the pre-extracted features for 1s segments and put them in the `data/features` directory.
 
 ## Step 1: Baselines reproduction
-
-Download the official best checkpoints
-from [here](https://utdallas.app.box.com/s/uz3s1alrzucz03sleify8kazhuc1ksl3) (`error_recognition_best` directory) and
-place them in the `checkpoints`. Then run the evaluation for the error recognition task.
+Download the official best checkpoints from [here](https://utdallas.app.box.com/s/uz3s1alrzucz03sleify8kazhuc1ksl3) (`error_recognition_best` directory) and place them in the `checkpoints`. Then run the evaluation for the error recognition task.
 
 **Example command**:
-
 ```
 python -m core.evaluate --variant MLP --backbone omnivore --ckpt checkpoints/error_recognition_best/MLP/omnivore/error_recognition_MLP_omnivore_step_epoch_43.pt --split step --threshold 0.6
 ```
@@ -35,8 +31,7 @@ You should be able to reproduce results close to those reported in the paper (Ta
 
 ## Acknowledgements
 
-This project builds on many repositories from the CaptainCook4D release. Please refer to the original codebases for more
-details.
+This project builds on many repositories from the CaptainCook4D release. Please refer to the original codebases for more details.
 
 **Error Recognition**: https://github.com/CaptainCook4D/error_recognition
 
