@@ -161,8 +161,11 @@ def train_epoch(model, device, train_loader, optimizer, epoch, criterion):
 
 
 def train_model_base(train_loader, val_loader, config, test_loader=None):
-    model = fetch_model(config)
+    if torch.cuda.is_available():
+        print("Forcing device to CUDA")
+        config.device = torch.device("cuda")
     device = config.device
+    model = fetch_model(config)
     optimizer = optim.Adam(model.parameters(), lr=config.lr, weight_decay=config.weight_decay)
     criterion = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([2.5], dtype=torch.float32).to(device))
     scheduler = ReduceLROnPlateau(
@@ -277,7 +280,7 @@ def train_step_test_step_dataset_base(config):
 
     cuda_kwargs = {
         "num_workers": 0,
-        "pin_memory": False,
+        "pin_memory": True,
     }
     train_kwargs = {**cuda_kwargs, "shuffle": True, "batch_size": config.batch_size}
     test_kwargs = {**cuda_kwargs, "shuffle": False, "batch_size": 1}
@@ -306,7 +309,7 @@ def train_sub_step_test_step_dataset_base(config):
 
     cuda_kwargs = {
         "num_workers": 1,
-        "pin_memory": False,
+        "pin_memory": True,
     }
     train_kwargs = {**cuda_kwargs, "shuffle": True, "batch_size": 1024}
     test_kwargs = {**cuda_kwargs, "shuffle": False, "batch_size": 1}
