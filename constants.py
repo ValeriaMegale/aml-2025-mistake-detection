@@ -4,7 +4,7 @@ class Constants:
     DATE = "date"
     RESULT_DETAILS = "result_details"
     BEST_MODEL_TYPE = "best_model_type"
-
+    RNN_VARIANT = "RNN"
     ACCURACY = "accuracy"
     LOSS = "loss"
     PRECISION = "precision"
