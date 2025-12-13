@@ -17,9 +17,9 @@ class Config(object):
         # Use this for 1 sec video features
         self.segment_features_directory = "data/"
 
-        self.ckpt_directory = "/data/rohith/captain_cook/checkpoints/"
+        self.ckpt_directory = "./checkpoints/"
         self.split = "recordings"
-        self.batch_size = 1
+        self.batch_size = 16
         self.test_batch_size = 1
         self.num_epochs = 10
         self.lr = 1e-3
@@ -53,7 +53,7 @@ class Config(object):
         # CONFIGURATION PARAMETERS
         # ----------------------------------------------------------------------------------------------
 
-        parser.add_argument("--batch_size", type=int, default=1, help="batch size")
+        parser.add_argument("--batch_size", type=int, default=16, help="batch size")
         parser.add_argument("--test-batch-size", type=int, default=1, help="input batch size for testing (default: 1000)")
         parser.add_argument("--num_epochs", type=int, default=10, help="number of epochs")
         parser.add_argument("--lr", type=float, default=1e-3, help="learning rate")
@@ -62,7 +62,7 @@ class Config(object):
         parser.add_argument("--seed", type=int, default=42, help="random seed (default: 1000)")
 
         parser.add_argument("--backbone", type=str, default=const.OMNIVORE, help="backbone model")
-        parser.add_argument("--ckpt_directory", type=str, default="/data/rohith/captain_cook/checkpoints", help="checkpoint directory")
+        parser.add_argument("--ckpt_directory", type=str, default="./checkpoints", help="checkpoint directory")
         parser.add_argument("--split", type=str, default=const.RECORDINGS_SPLIT, help="split")
         parser.add_argument("--variant", type=str, default=const.TRANSFORMER_VARIANT, help="variant")
         parser.add_argument("--model_name", type=str, default=None, help="model name")

@@ -54,16 +54,37 @@ class RNNBaseline(nn.Module):
         self.fc = nn.Linear(hidden_dim, output_dim)
 
     def forward(self, x):
+        # x shape potrebbe essere [batch_size, seq_len, input_dim] o [seq_len, input_dim]
+        # Se manca la dimensione batch, aggiungila
+        original_shape = x.shape
+        if x.dim() == 2:
+            x = x.unsqueeze(0)  # [seq_len, input_dim] -> [1, seq_len, input_dim]
+            was_2d = True
+        else:
+            was_2d = False
+        
         # x shape: [batch_size, seq_len, input_dim]
         
         # LSTM output shape: [batch_size, seq_len, hidden_dim]
         # hn shape: [num_layers, batch_size, hidden_dim]
         # cn shape: [num_layers, batch_size, hidden_dim]
-        out, (hn, cn) = self.lstm(x)
+        lstm_out, (hn, cn) = self.lstm(x)
         
-        # Usiamo l'hidden state dell'ultimo step temporale per la classificazione
-        # hn[-1] prende l'ultimo layer
-        out = self.fc(hn[-1])
+        # Applica il fully connected layer a ogni timestep dell'output LSTM
+        # lstm_out shape: [batch_size, seq_len, hidden_dim]
+        # Reshape per applicare fc: [batch_size * seq_len, hidden_dim]
+        batch_size, seq_len, hidden_dim = lstm_out.shape
+        lstm_out_reshaped = lstm_out.reshape(batch_size * seq_len, hidden_dim)
+        
+        # Applica il fully connected layer
+        out = self.fc(lstm_out_reshaped)  # [batch_size * seq_len, output_dim]
+        
+        # Reshape di nuovo: [batch_size, seq_len, output_dim]
+        out = out.reshape(batch_size, seq_len, -1)
+        
+        # Se era 2D in input, rimuovi la dimensione batch per coerenza con altri modelli
+        if was_2d:
+            out = out.squeeze(0)  # [seq_len, output_dim]
         
         return out
 
