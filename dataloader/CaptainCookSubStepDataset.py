@@ -54,6 +54,39 @@ class CaptainCookSubStepDataset(Dataset):
         assert len(self._sub_step_dict) > 0, "No data found in the dataset"
         return len(self._sub_step_dict)
 
+    def get_error_types(self):
+        """
+        Restituisce una lista di stringhe rappresentanti il tipo di errore (o 'Normal')
+        per ogni campione nel dataset, nello stesso ordine degli indici.
+        """
+        error_types_list = []
+        for idx in range(len(self._step_dict)):
+            # self._step_dict[idx] = (recording_id, step_start_end_list)
+            step_start_end_list = self._step_dict[idx][1]
+            
+            # Prendiamo il primo sub-segmento per determinare l'errore dello step 
+            # (assumiamo che lo step sia coerente)
+            # step_start_end_list[0] = (start, end, has_errors, error_category_labels)
+            has_errors = step_start_end_list[0][2]
+            error_category_labels = step_start_end_list[0][3]
+            
+            if not has_errors:
+                error_types_list.append("Normal")
+            else:
+                # error_category_labels è un set di ID numerici (es. {6})
+                if len(error_category_labels) > 0:
+                    # Prendiamo il primo errore (se ce ne sono multipli)
+                    first_label_id = list(error_category_labels)[0]
+                    # Convertiamo ID -> Nome (es. 6 -> 'Technique Error')
+                    if first_label_id in self._error_category_label_name_map:
+                         error_types_list.append(self._error_category_label_name_map[first_label_id])
+                    else:
+                         error_types_list.append("Unknown Error")
+                else:
+                    error_types_list.append("Generic Error")
+                    
+        return error_types_list
+
     def __getitem__(self, idx):
         recording_id = self._sub_step_dict[idx][0]
         start_time, end_time = self._sub_step_dict[idx][1]
