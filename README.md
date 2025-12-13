@@ -24,13 +24,12 @@ python -m core.evaluate --variant MLP --backbone omnivore --ckpt checkpoints/err
 ```
 
 You should be able to reproduce results close to those reported in the paper (Table 2):
-
-| Split      | Model              | F1    | AUC   |
-|------------|--------------------|-------|-------|
-| Step       | MLP (Omnivore)     | 24.26 | 75.74 |
-| Recordings | MLP (Omnivore)     | 55.42 | 63.03 |
-| Step       | Transf. (Omnivore) | 55.39 | 75.62 |
-| Recordings | Transf. (Omnivore) | 40.73 | 62.27 |
+| Split | Model | F1 | AUC | Path |
+|-------|-------|----|-----| ----|
+| Step | MLP (Omnivore) | 24.26 | 75.74 | checkpoints/error_recognition_best/MLP/omnivore/error_recognition_MLP_omnivore_step_epoch_43.pt |
+| Recordings | MLP (Omnivore) | 55.42 | 63.03 |checkpoints/error_recognition_best/MLP/omnivore/error_recognition_MLP_omnivore_recordings_epoch_33.pt |
+| Step | Transf. (Omnivore) | 55.39 | 75.62 |  checkpoints/error_recognition_best/Transformer/omnivore/error_recognition_Transformer_omnivore_step_epoch_9.pt |
+| Recordings | Transf. (Omnivore) | 40.73 | 62.27 | checkpoints/error_recognition_best/Transformer/omnivore/error_recognition_Transformer_omnivore_recordings_epoch_31.pt |
 
 **NOTE**: Use the thresholds indicated in the official README.md of project (0.6 for step and 0.4 for recordings steps).
 
