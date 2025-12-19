@@ -57,7 +57,7 @@ def fetch_model(config):
         if config.backbone in [const.OMNIVORE, const.RESNET3D, const.X3D, const.SLOWFAST, const.IMAGEBIND]:
             input_dim = fetch_input_dim(config)
             # Usa parametri simili a quelli comuni per RNN
-            hidden_dim = 256
+            hidden_dim = 128
             num_layers = 2
             model = RNNBaseline(input_dim, hidden_dim, num_layers, output_dim=1)
 
@@ -172,7 +172,7 @@ def train_model_base(train_loader, val_loader, config, test_loader=None):
     next_param = next(model.parameters())
     print(f"Model device: {next_param.device}, Model on CUDA: {next_param.is_cuda}")
     optimizer = optim.Adam(model.parameters(), lr=config.lr, weight_decay=config.weight_decay)
-    criterion = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([2.5], dtype=torch.float32).to(device))
+    criterion = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([1.5], dtype=torch.float32).to(device))
     scheduler = ReduceLROnPlateau(
         optimizer, mode='max',
         factor=0.1, patience=5, verbose=True,
@@ -284,7 +284,7 @@ def train_step_test_step_dataset_base(config):
     torch.manual_seed(config.seed)
 
     cuda_kwargs = {
-        "num_workers": 8,  # Aumentato per migliorare il data loading
+        "num_workers": 0,  # Aumentato per migliorare il data loading
         "pin_memory": True,
     }
     train_kwargs = {**cuda_kwargs, "shuffle": True, "batch_size": config.batch_size}
@@ -313,7 +313,7 @@ def train_sub_step_test_step_dataset_base(config):
     torch.manual_seed(config.seed)
 
     cuda_kwargs = {
-        "num_workers": 8,  # Aumentato per migliorare il data loading
+        "num_workers": 0,  # Aumentato per migliorare il data loading
         "pin_memory": True,
     }
     train_kwargs = {**cuda_kwargs, "shuffle": True, "batch_size": 1024}
