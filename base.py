@@ -59,7 +59,8 @@ def fetch_model(config):
             # Usa parametri simili a quelli comuni per RNN
             hidden_dim = 128
             num_layers = 2
-            model = RNNBaseline(input_dim, hidden_dim, num_layers, output_dim=1)
+            dropout = 0.5  # Dropout aumentato per contrastare overfitting
+            model = RNNBaseline(input_dim, hidden_dim, num_layers, output_dim=1, dropout=dropout)
 
     assert model is not None, f"Model not found for variant: {config.variant} and backbone: {config.backbone}"
     model.to(config.device)
@@ -264,7 +265,7 @@ def train_model_base(train_loader, val_loader, config, test_loader=None):
             if config.enable_wandb:
                 wandb.log(running_metrics)
 
-            print(f'Epoch: {epoch}, Train Loss: {avg_train_loss:.6f}, Test Loss: {avg_test_loss:.6f}, '
+            print(f'Epoch: {epoch}, Train Loss: {avg_train_loss:.6f}, Val Loss: {avg_val_loss:.6f}, Test Loss: {avg_test_loss:.6f}, '
                   f'Precision: {precision:.6f}, Recall: {recall:.6f}, F1: {f1:.6f}, AUC: {auc:.6f}')
 
             # Update best model based on the chosen metric, here using AUC as an example
@@ -341,6 +342,9 @@ def train_sub_step_test_step_dataset_base(config):
 
 def test_er_model(model, test_loader, criterion, device, phase, step_normalization=True, sub_step_normalization=True,
                   threshold=0.6):
+    # IMPORTANTE: metti il modello in eval mode per disabilitare dropout e batch norm durante la validazione
+    model.eval()
+    
     total_samples = 0
     all_targets = []
     all_outputs = []

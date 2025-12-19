@@ -19,11 +19,11 @@ class Config(object):
 
         self.ckpt_directory = "./checkpoints/"
         self.split = "recordings"
-        self.batch_size = 16
+        self.batch_size = 128
         self.test_batch_size = 1
-        self.num_epochs = 10
-        self.lr = 1e-3
-        self.weight_decay = 1e-3
+        self.num_epochs = 100
+        self.lr = 5e-4  # Learning rate ridotto per training più stabile
+        self.weight_decay = 5e-3  # Weight decay aumentato per maggiore regolarizzazione
         self.log_interval = 5
         self.dry_run = False
         self.ckpt = None
@@ -53,11 +53,11 @@ class Config(object):
         # CONFIGURATION PARAMETERS
         # ----------------------------------------------------------------------------------------------
 
-        parser.add_argument("--batch_size", type=int, default=16, help="batch size")
+        parser.add_argument("--batch_size", type=int, default=128, help="batch size")
         parser.add_argument("--test-batch-size", type=int, default=1, help="input batch size for testing (default: 1000)")
-        parser.add_argument("--num_epochs", type=int, default=10, help="number of epochs")
-        parser.add_argument("--lr", type=float, default=1e-4, help="learning rate")
-        parser.add_argument("--weight_decay", type=float, default=1e-3, help="weight decay")
+        parser.add_argument("--num_epochs", type=int, default=100, help="number of epochs")
+        parser.add_argument("--lr", type=float, default=5e-4, help="learning rate")
+        parser.add_argument("--weight_decay", type=float, default=5e-3, help="weight decay")
         parser.add_argument("--ckpt", type=str, default=None, help="checkpoint path")
         parser.add_argument("--seed", type=int, default=42, help="random seed (default: 1000)")
 
