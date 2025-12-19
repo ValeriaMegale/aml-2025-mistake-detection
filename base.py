@@ -172,7 +172,7 @@ def train_model_base(train_loader, val_loader, config, test_loader=None):
     next_param = next(model.parameters())
     print(f"Model device: {next_param.device}, Model on CUDA: {next_param.is_cuda}")
     optimizer = optim.Adam(model.parameters(), lr=config.lr, weight_decay=config.weight_decay)
-    criterion = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([1.5], dtype=torch.float32).to(device))
+    criterion = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([2.5], dtype=torch.float32).to(device))
     scheduler = ReduceLROnPlateau(
         optimizer, mode='max',
         factor=0.1, patience=5, verbose=True,
@@ -284,7 +284,7 @@ def train_step_test_step_dataset_base(config):
     torch.manual_seed(config.seed)
 
     cuda_kwargs = {
-        "num_workers": 0,  # Aumentato per migliorare il data loading
+        "num_workers": 8,  # Aumentato per migliorare il data loading
         "pin_memory": True,
     }
     train_kwargs = {**cuda_kwargs, "shuffle": True, "batch_size": config.batch_size}
@@ -313,7 +313,7 @@ def train_sub_step_test_step_dataset_base(config):
     torch.manual_seed(config.seed)
 
     cuda_kwargs = {
-        "num_workers": 0,  # Aumentato per migliorare il data loading
+        "num_workers": 8,  # Aumentato per migliorare il data loading
         "pin_memory": True,
     }
     train_kwargs = {**cuda_kwargs, "shuffle": True, "batch_size": 1024}
@@ -345,7 +345,6 @@ def test_er_model(model, test_loader, criterion, device, phase, step_normalizati
     all_targets = []
     all_outputs = []
 
-    test_loader = tqdm(test_loader)
     num_batches = len(test_loader)
     test_losses = []
 
@@ -356,11 +355,163 @@ def test_er_model(model, test_loader, criterion, device, phase, step_normalizati
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
             output = model(data)
+
             total_samples += data.shape[0]
+
             loss = criterion(output, target)
             test_losses.append(loss.item())
 
             sigmoid_output = output.sigmoid()
+
+            # --- CORREZIONE: Gestione corretta degli indici ---
+
+            # 1. Appiattiamo le predizioni di questo batch
+            batch_preds = sigmoid_output.detach().cpu().numpy().reshape(-1)
+            batch_targets = target.detach().cpu().numpy().reshape(-1)
+
+            all_outputs.append(batch_preds)
+            all_targets.append(batch_targets)
+
+            # 2. Calcoliamo quanti 'frame' (o sub-steps) ci sono realmente in questo batch
+            num_frames_in_batch = batch_preds.shape[0]
+
+            # 3. Salviamo l'intervallo corretto nella lista piatta globale
+            test_step_start_end_list.append((counter, counter + num_frames_in_batch))
+
+            # 4. Incrementiamo il counter in base ai FRAME, non ai video
+            counter += num_frames_in_batch
+
+            # NOTA: Ho rimosso le righe duplicate che avevi lasciato qui sotto
+            # che usavano data.shape[0] e doppiavano l'append.
+
+            # Opzionale: update progress bar description se usi tqdm
+            if hasattr(test_loader, 'set_description'):
+                test_loader.set_description(f'{phase} Progress: {total_samples}/{num_batches}')
+
+    # Flatten lists
+    all_outputs = np.concatenate(all_outputs)
+    all_targets = np.concatenate(all_targets)
+
+    # Assert that none of the outputs are NaN
+    assert not np.isnan(all_outputs).any(), "Outputs contain NaN values"
+
+    # ------------------------- Sub-Step Level Metrics -------------------------
+    all_sub_step_targets = all_targets.copy()
+    all_sub_step_outputs = all_outputs.copy()
+
+    # Calculate metrics at the sub-step level
+    pred_sub_step_labels = (all_sub_step_outputs > 0.5).astype(int)
+    sub_step_precision = precision_score(all_sub_step_targets, pred_sub_step_labels, zero_division=0)
+    sub_step_recall = recall_score(all_sub_step_targets, pred_sub_step_labels, zero_division=0)
+    sub_step_f1 = f1_score(all_sub_step_targets, pred_sub_step_labels, zero_division=0)
+    sub_step_accuracy = accuracy_score(all_sub_step_targets, pred_sub_step_labels)
+
+    try:
+        sub_step_auc = roc_auc_score(all_sub_step_targets, all_sub_step_outputs)
+    except ValueError:
+        sub_step_auc = 0.5  # Fallback se c'è una sola classe
+
+    sub_step_pr_auc = binary_auprc(torch.tensor(all_sub_step_outputs), torch.tensor(all_sub_step_targets))
+
+    sub_step_metrics = {
+        const.PRECISION: sub_step_precision,
+        const.RECALL: sub_step_recall,
+        const.F1: sub_step_f1,
+        const.ACCURACY: sub_step_accuracy,
+        const.AUC: sub_step_auc,
+        const.PR_AUC: sub_step_pr_auc
+    }
+
+    # -------------------------- Step Level Metrics --------------------------
+    all_step_targets = []
+    all_step_outputs = []
+
+    for start, end in test_step_start_end_list:
+        step_output = all_outputs[start:end]
+        step_target = all_targets[start:end]
+
+        step_output = np.array(step_output)
+
+        # FIX LOGICO: end - start, non start - end
+        if (end - start) > 1:
+            if sub_step_normalization:
+                prob_range = np.max(step_output) - np.min(step_output)
+                if prob_range > 0:  # Evita divisione per zero
+                    step_output = (step_output - np.min(step_output)) / prob_range
+
+        mean_step_output = np.mean(step_output)
+        # Assumiamo errore se > 95% dei frame sono errore, altrimenti 0?
+        # (Logica originale mantenuta)
+        step_target = 1 if np.mean(step_target) > 0.95 else 0
+
+        all_step_outputs.append(mean_step_output)
+        all_step_targets.append(step_target)
+
+    all_step_outputs = np.array(all_step_outputs)
+
+    if step_normalization:
+        prob_range = np.max(all_step_outputs) - np.min(all_step_outputs)
+        if prob_range > 0:
+            all_step_outputs = (all_step_outputs - np.min(all_step_outputs)) / prob_range
+
+    all_step_targets = np.array(all_step_targets)
+
+    # Calculate metrics at the step level
+    pred_step_labels = (all_step_outputs > threshold).astype(int)
+
+    # Aggiunto zero_division=0 per evitare warning
+    precision = precision_score(all_step_targets, pred_step_labels, zero_division=0)
+    recall = recall_score(all_step_targets, pred_step_labels, zero_division=0)
+    f1 = f1_score(all_step_targets, pred_step_labels, zero_division=0)
+    accuracy = accuracy_score(all_step_targets, pred_step_labels)
+
+    try:
+        auc = roc_auc_score(all_step_targets, all_step_outputs)
+    except ValueError:
+        auc = 0.5
+
+    pr_auc = binary_auprc(torch.tensor(all_step_outputs), torch.tensor(all_step_targets))
+
+    step_metrics = {
+        const.PRECISION: precision,
+        const.RECALL: recall,
+        const.F1: f1,
+        const.ACCURACY: accuracy,
+        const.AUC: auc,
+        const.PR_AUC: pr_auc
+    }
+
+    print("----------------------------------------------------------------")
+    print(f'{phase} Sub Step Level Metrics: {sub_step_metrics}')
+    print(f"{phase} Step Level Metrics: {step_metrics}")
+    print("----------------------------------------------------------------")
+
+    return test_losses, sub_step_metrics, step_metrics
+def test_er_modelv1312(model, test_loader, criterion, device, phase, step_normalization=True, sub_step_normalization=True,
+                  threshold=0.6):
+    total_samples = 0
+    all_targets = []
+    all_outputs = []
+
+    # test_loader = tqdm(test_loader)
+    num_batches = len(test_loader)
+    test_losses = []
+
+    test_step_start_end_list = []
+    counter = 0
+
+    with torch.no_grad():
+        for data, target in test_loader:
+            data, target = data.to(device), target.to(device)
+            output = model(data)
+
+            total_samples += data.shape[0]
+
+            loss = criterion(output, target)
+            test_losses.append(loss.item())
+
+            sigmoid_output = output.sigmoid()
+
             all_outputs.append(sigmoid_output.detach().cpu().numpy().reshape(-1))
             all_targets.append(target.detach().cpu().numpy().reshape(-1))
 
