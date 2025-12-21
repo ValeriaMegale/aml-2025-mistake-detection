@@ -56,6 +56,7 @@ class Config(object):
         parser.add_argument("--batch_size", type=int, default=128, help="batch size")
         parser.add_argument("--test-batch-size", type=int, default=1, help="input batch size for testing (default: 1000)")
         parser.add_argument("--num_epochs", type=int, default=100, help="number of epochs")
+        parser.add_argument("--epochs", type=int, dest="num_epochs", help="number of epochs (alias for --num_epochs)")
         parser.add_argument("--lr", type=float, default=5e-4, help="learning rate")
         parser.add_argument("--weight_decay", type=float, default=5e-3, help="weight decay")
         parser.add_argument("--ckpt", type=str, default=None, help="checkpoint path")
