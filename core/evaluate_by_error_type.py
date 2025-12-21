@@ -280,6 +280,8 @@ def eval_er_by_error_type(config, threshold):
     # Carica dataset test - usando CaptainCookStepDataset esistente
     from dataloader.CaptainCookStepDataset import collate_fn
     test_dataset = CaptainCookStepDataset(config, const.TEST, config.split)
+    # IMPORTANTE: Non usare shuffle=True, altrimenti l'associazione 
+    # tra predizioni e categorie di errore sarà sbagliata
     test_loader = DataLoader(test_dataset, batch_size=config.test_batch_size, collate_fn=collate_fn)
     print(f"Test dataset size: {len(test_dataset)} steps")
     
