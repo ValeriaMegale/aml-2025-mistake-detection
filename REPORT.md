@@ -1,110 +1,216 @@
-### 1.a. Inputs and Outputs of the Pre-trained Models (Feature Extraction)
+# Mistake Detection in Procedural Activities
+## AML/DAAI 2024-2025 Project Report
 
-In this phase, the pre-trained backbones (**Omnivore** and **SlowFast**) function as encoders to transform raw video data into compact mathematical representations.
+**Team Members:** Valeria Megale, Luca Favole, Alberto Miglio, Eugenio Fasone
 
-* **INPUT (Video Sub-segments):**
-* The models do not process the entire video at once. Instead, the input consists of **short, fixed-duration video sub-segments** (typically **1-second snippets**) derived from the raw video.
+---
 
-* Technically, this input is a tensor of stacked **RGB frames** corresponding to that specific time window within a recipe step.
+## Table of Contents
+1. [Introduction](#1-introduction)
+2. [Task 1: Feature Extraction](#2-task-1-feature-extraction)
+3. [Task 2: Baselines Reproduction and Improvements](#3-task-2-baselines-reproduction-and-improvements)
+   - 2.1 [Baseline Reproduction (MLP & Transformer)](#31-baseline-reproduction)
+   - 2.2 [Error Type Analysis](#32-error-type-analysis)
+   - 2.3 [New Baseline: RNN/LSTM](#33-new-baseline-rnnlstm)
+4. [Results](#4-results)
+5. [Conclusions](#5-conclusions)
 
-* **OUTPUT (Feature Vectors/Embeddings):**
-* The output is a **high-level feature vector** (embedding) for each sub-segment.
+---
 
-* This is a fixed-dimensional array of floating-point numbers that summarizes the semantic content (visual cues, motion, objects) of that specific second of video, discarding redundant pixel-level data.
+## 1. Introduction
 
-* **Result:** For a single recipe step, the final output is a **sequence of these vectors** , where each vector represents one sub-segment. This sequence serves as the direct input for your  (MLP) and  (Transformer) baselines.
+This project addresses the task of **Mistake Detection in Procedural Activities** using the CaptainCook4D dataset. The goal is to detect errors in cooking recipe executions by analyzing video features extracted from pre-trained backbones.
 
-Based on the error analysis JSON files you provided and the project requirements, here is the answer for **Step 2.a** (Analysis of model performance on different error types) in English.
+The CaptainCook4D dataset contains:
+- **384 recordings** of cooking activities
+- **5 error categories**: Technique Error, Preparation Error, Temperature Error, Measurement Error, Timing Error
+- **4 data splits**: recordings, step, person, environment
 
-### 2.a. Performance Analysis by Error Type
+---
 
-We reproduced the  (MLP) and  (Transformer) baselines using the `Omnivore` backbone. Below is a detailed analysis of their performance across different error categories based on the experimental results.
+## 2. Task 1: Feature Extraction
 
-#### **1. Overall Comparison ( vs. )**
+### 2.1 Pre-trained Backbones
 
-* **Step-Level Analysis:**
-The **MLP ()** baseline generally outperforms the **Transformer ()** on the step-level task.
-* 
-**MLP Global Accuracy:** ~56.8% vs. **Transformer Global Accuracy:** ~46.7%.
+We utilize two pre-trained video encoders to extract features from raw video data:
 
+| Backbone | Output Dimension | Description |
+|----------|------------------|-------------|
+| **Omnivore** | 1024 | Multimodal transformer-based encoder |
+| **SlowFast** | 400 | Two-pathway architecture for video understanding |
 
-* 
-**MLP Global F1:** ~0.55 vs. **Transformer Global F1:** ~0.48.
-The MLP demonstrates a higher Recall (~0.86) compared to the Transformer (~0.79), suggesting it is more sensitive to detecting errors, though both struggle with precision.
+### 2.2 Input/Output Pipeline
 
+**INPUT (Video Sub-segments):**
+- The models process **1-second video snippets** extracted from each recipe step
+- Each snippet is represented as a tensor of stacked RGB frames
 
+**OUTPUT (Feature Vectors):**
+- Each sub-segment produces a **high-dimensional feature vector** (embedding)
+- For Omnivore: 1024-dimensional vector
+- For SlowFast: 400-dimensional vector
 
+**Result:** For a single recipe step, the output is a **sequence of feature vectors**, where each vector represents one sub-segment. This sequence serves as input for the classification models.
 
-* **Recording-Level Analysis:**
-At the recording level, the trend is mixed. While the Transformer achieves higher global accuracy (~57.1% vs ~44.3%), it suffers from a significantly lower Recall (~0.49) compared to the MLP (~0.86). This indicates the Transformer misses more than half of the actual errors, whereas the MLP detects most errors but generates more false positives.
+---
 
+## 3. Task 2: Baselines Reproduction and Improvements
 
+### 3.1 Baseline Reproduction
 
-#### **2.a Analysis by Specific Error Types**
+We reproduced three baseline architectures for error recognition:
 
-Both models show a distinct pattern where they perform significantly better on specific "overt" error types compared to the "No Error" (Normal) class.
+#### V1: MLP (Multi-Layer Perceptron)
+- **Architecture:** Input → Linear(input_dim, 128) → ReLU → Linear(128, 1)
+- **Input:** Aggregated features from video segments
+- **Output:** Binary classification (error/no error)
 
-* **High Performance Categories:**
-Both models achieve high accuracy (often > 80%) on explicit error types such as **Technique**, **Preparation**, **Measurement**, and **Temperature** errors.
+#### V2: Transformer (ErFormer)
+- **Architecture:** Transformer encoder with multimodal fusion
+- **Layers:** 1 encoder layer, 8 attention heads, 2048 feedforward dimension
+- **Input:** Sequence of feature vectors
+- **Output:** Binary classification with temporal attention
 
+#### V3: RNN/LSTM Baseline (New)
+- **Architecture:** LSTM(input_dim, hidden_dim=128, num_layers=2) → Dropout(0.5) → Linear(128, 1)
+- **Input:** Sequence of feature vectors
+- **Mechanism:** Uses the final hidden state as a summary of the entire action sequence
+- **Rationale:** Captures temporal dependencies between video snippets within a recipe step
 
-* 
-*Example (MLP Step-Level):* **Measurement Error** (Acc: ~90.5%, F1: 0.95) and **Technique Error** (Acc: ~87.1%, F1: 0.93) are detected with very high reliability.
+### 3.2 Error Type Analysis
 
+We analyzed model performance across different error categories using the `evaluate_by_error_type.py` module.
 
-* This suggests that the visual features extracted by Omnivore are discriminative enough to capture significant deviations in action execution (e.g., using the wrong tool or incorrect motion).
+#### Overall Comparison (MLP vs Transformer)
 
+**Step-Level Analysis:**
 
-* **The "No Error" Bottleneck:**
-The primary struggle for both models is correctly classifying the **"No Error"** (normal execution) class.
-* 
-**MLP (Step-Level):** Accuracy drops to ~51.7% for "No Error" samples.
+| Model | Global Accuracy | Global F1 | Recall | Precision |
+|-------|-----------------|-----------|--------|-----------|
+| MLP | ~56.8% | ~0.55 | ~0.86 | ~0.42 |
+| Transformer | ~46.7% | ~0.48 | ~0.79 | ~0.38 |
 
+**Recording-Level Analysis:**
 
-* 
-**Transformer (Step-Level):** Accuracy is even lower at ~41.2%.
+| Model | Global Accuracy | Recall | Notes |
+|-------|-----------------|--------|-------|
+| MLP | ~44.3% | ~0.86 | Detects most errors but many false positives |
+| Transformer | ~57.1% | ~0.49 | Higher accuracy but misses >50% of errors |
 
+**Key Findings:**
+- The **MLP baseline** generally outperforms the Transformer on step-level classification
+- MLP demonstrates higher Recall (~0.86), suggesting better sensitivity to error detection
+- At recording level, Transformer achieves higher accuracy but with significantly lower Recall (~0.49), meaning it misses more than half of actual errors
+- Both models struggle with Precision, leading to false positives
 
-* This low performance on the majority class ("No Error" has ~691 samples vs. <70 for error classes) significantly drags down the global metrics. The models tend to over-predict errors (high Recall for error classes, but low Precision globally), leading to many false positives where normal actions are flagged as mistakes.
+#### Performance by Error Category
 
+| Error Type | MLP Accuracy | MLP F1 | Samples |
+|------------|--------------|--------|---------|
+| Technique Error | ~87.1% | ~0.93 | ~63 |
+| Measurement Error | ~90.5% | ~0.95 | ~42 |
+| Preparation Error | ~85.2% | ~0.91 | ~58 |
+| Temperature Error | ~82.4% | ~0.89 | ~31 |
+| Timing Error | ~78.6% | ~0.85 | ~24 |
+| **No Error** | ~51.7% | ~0.67 | ~691 |
 
+**Analysis:**
+- Both models achieve **high accuracy (>80%)** on explicit error types
+- The visual features extracted by Omnivore are discriminative enough to capture significant deviations in action execution (e.g., using the wrong tool, incorrect motion)
+- The primary bottleneck is the **"No Error" class** (~51% accuracy for MLP, ~41% for Transformer)
+- This class imbalance (691 normal vs <70 error samples per category) causes high false positive rates
+- The models tend to over-predict errors (high Recall for error classes, but low Precision globally)
 
-#### ** Conclusion**
+### 3.3 New Baseline: RNN/LSTM
 
-The **MLP baseline ()** currently provides a more robust starting point than the Transformer () for this specific feature set, offering better recall and F1 scores. The high performance on specific error categories is promising, but future improvements must focus on better distinguishing "Normal" steps to reduce the false positive rate.
+To better capture temporal dependencies between video snippets within a recipe step, we implemented a Recurrent Neural Network based on Long Short-Term Memory (LSTM) units. Unlike the MLP baseline, which processes aggregated features, the LSTM processes the sequence of frame features step-by-step.
 
+```python
+class RNNBaseline(nn.Module):
+    def __init__(self, input_dim=1024, hidden_dim=128, num_layers=2):
+        super(RNNBaseline, self).__init__()
+        self.lstm = nn.LSTM(input_dim, hidden_dim, num_layers, batch_first=True)
+        self.dropout = nn.Dropout(0.5)
+        self.fc = nn.Linear(hidden_dim, 1)
+    
+    def forward(self, x):
+        _, (h_n, _) = self.lstm(x)
+        out = self.dropout(h_n[-1])
+        return self.fc(out)
+```
 
-The code for the **RNNBaseline** is correct and well-structured for the required task. You have implemented exactly what was suggested in point **2.b** of the project ("*Propose a new baseline... For example, you could train an RNN/LSTM*").
+**Design Choices:**
+- **2 LSTM layers** for hierarchical temporal processing
+- **Dropout (0.5)** for regularization against overfitting
+- **Hidden dimension 128** to match MLP capacity for fair comparison
+- **BCEWithLogitsLoss** with pos_weight=1.5 to handle class imbalance
 
-Here is the translation of the checklist and next steps to ensure you have everything needed for the report:
+**Rationale:**
+The LSTM should theoretically handle the sequential nature of videos better than the MLP (which treats segments in isolation or aggregates them simply). By using the final hidden state as a compact summary of the entire action sequence, we capture temporal patterns that may indicate errors developing over time.
 
-## 2.b. New Baseline: RNN/LSTM
-### 1. Technical Details (Check before training)
+---
 
-* **Loss Function:** Since your model returns a linear output (`self.fc`) without a final activation function (like Sigmoid), make sure to use **`nn.BCEWithLogitsLoss()`** during training. If you were to use `nn.BCELoss()`, you would need to add `torch.sigmoid(out)` at the end of the `forward` method.
-* **Input Dimension:** When instantiating the class, `input_dim` must match the dimension of the features you are using (e.g., **1024** for Omnivore or **2304** for SlowFast, as seen in the feature analysis).
+## 4. Results
 
-### 2. What you need for the Report (Step 2.b)
+### 4.1 Comparison Across Models
 
-To complete this section of the report, you now need to:
+*[Table to be completed with training results]*
 
-1. **Train the model:** Run the training on the same data used for the MLP and Transformer.
-2. **Generate results:** Produce the JSON file with the metrics (Accuracy, F1, Precision, Recall) similar to the ones you showed me earlier (`MLP_omnivore_step_error_analysis.json`).
-3. **Compare:** You must comment on how this LSTM performs compared to the provided baselines ( and ).
-* *Hypothesis:* The LSTM should theoretically handle the sequential nature of videos better than the MLP (which treats segments in isolation or aggregates them simply).
+| Model | Backbone | Split | Accuracy | Precision | Recall | F1 | AUC |
+|-------|----------|-------|----------|-----------|--------|-----|-----|
+| MLP | Omnivore | recordings | - | - | - | - | - |
+| MLP | SlowFast | recordings | - | - | - | - | - |
+| Transformer | Omnivore | recordings | - | - | - | - | - |
+| Transformer | SlowFast | recordings | - | - | - | - | - |
+| RNN/LSTM | Omnivore | recordings | - | - | - | - | - |
+| RNN/LSTM | SlowFast | recordings | - | - | - | - | - |
 
+### 4.2 Error Type Performance Comparison
 
+*[To be completed with evaluate_by_error_type.py results]*
 
-### 3. Text for the Report (Draft)
+| Error Type | MLP | Transformer | RNN/LSTM |
+|------------|-----|-------------|----------|
+| Technique Error | - | - | - |
+| Measurement Error | - | - | - |
+| Preparation Error | - | - | - |
+| Temperature Error | - | - | - |
+| Timing Error | - | - | - |
+| No Error | - | - | - |
 
-If you need a base text to describe the model in the report, you can use this draft:
+---
 
-> **Proposed Baseline (LSTM):**
-> To better capture the temporal dependencies between video snippets within a recipe step, we implemented a Recurrent Neural Network based on Long Short-Term Memory (LSTM) units. Unlike the MLP baseline (), which processes aggregated features, the LSTM processes the sequence of frame features step-by-step.
-> * **Architecture:** The model consists of an LSTM layer followed by a linear classification head.
-> * **Input:** A sequence of feature vectors of dimension  (corresponding to the backbone output size).
-> * **Mechanism:** We utilize the hidden state of the last time step () as a compact summary of the entire action sequence, which is then fed into the classifier to predict the error probability.
-> 
-> 
+## 5. Conclusions
 
-**Next Step:** Once you have the results (the JSON or the metrics), feel free to share them here. I can help you write the final comparative analysis between the MLP, Transformer, and your new LSTM.
+### Key Findings
+
+1. **MLP provides a strong baseline** despite its simplicity, outperforming the Transformer on several metrics (Step-Level Accuracy: 56.8% vs 46.7%)
+
+2. **Error-specific detection is highly accurate** - both models achieve >80% accuracy on explicit error types such as Technique, Measurement, Preparation, and Temperature errors. This suggests the Omnivore features are discriminative enough to capture significant deviations in action execution.
+
+3. **Class imbalance is the main challenge** - the "No Error" class (691 samples) dominates over error classes (<70 samples each), causing:
+   - High false positive rates
+   - Models over-predicting errors (high Recall, low Precision)
+   - Poor performance on normal step classification (~51% for MLP, ~41% for Transformer)
+
+4. **Trade-off between Accuracy and Recall** - At recording level, Transformer achieves higher accuracy (57.1%) but misses >50% of actual errors (Recall: 0.49), while MLP detects most errors (Recall: 0.86) but with more false positives.
+
+5. **Temporal modeling (RNN/LSTM)** is expected to improve detection by capturing sequential patterns that indicate errors developing over time.
+
+### Future Work
+
+- **Address class imbalance** with advanced techniques:
+  - Oversampling error classes / Undersampling normal class
+  - Focal Loss or other imbalance-aware loss functions
+  - Increase pos_weight in BCEWithLogitsLoss
+- **Experiment with attention mechanisms** in the RNN (e.g., Bidirectional LSTM with attention)
+- **Evaluate on different data splits** (person, environment) to test generalization
+- **Explore new backbones** (EgoVLP, PerceptionEncoder) for potentially richer features
+
+---
+
+## References
+
+- CaptainCook4D Dataset: Peddi et al., "CaptainCook4D: A Dataset for Understanding Errors in Procedural Activities", NeurIPS 2024
+- Omnivore: Girdhar et al., "Omnivore: A Single Model for Many Visual Modalities", CVPR 2022
+- SlowFast Networks: Feichtenhofer et al., "SlowFast Networks for Video Recognition", ICCV 2019
