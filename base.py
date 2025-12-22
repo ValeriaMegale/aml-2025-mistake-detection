@@ -427,7 +427,8 @@ def test_er_model(model, test_loader, criterion, device, phase, step_normalizati
         #     step_output = neg_output
         step_output = np.array(step_output)
         # # Scale the output to [0, 1]
-        if start - end > 1:
+        # FIX: era "start - end" che è sempre negativo, corretto in "end - start"
+        if end - start > 1:
             if sub_step_normalization:
                 prob_range = np.max(step_output) - np.min(step_output)
                 step_output = (step_output - np.min(step_output)) / prob_range
