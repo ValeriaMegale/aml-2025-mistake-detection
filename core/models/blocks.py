@@ -72,8 +72,8 @@ class RNNBaseline(nn.Module):
         # cn shape: [num_layers, batch_size, hidden_dim]
         lstm_out, (hn, cn) = self.lstm(x)
         
-        # Applica dropout dopo LSTM
-        # FIX: era self.dropout ma la variabile definita in __init__ è self.dropout_layer
+        # FIX: era self.dropout() che non esisteva (errore di merge).
+        # La variabile corretta è self.dropout_layer definita in __init__
         lstm_out = self.dropout_layer(lstm_out)
         
         # Applica il fully connected layer a ogni timestep dell'output LSTM
