@@ -38,6 +38,7 @@ class Constants:
 
     # --------------------- MODEL SPECIFIC CONSTANTS ---------------------
     OMNIVORE = "omnivore"
+    PERCEPTION = "perception"
     RESNET3D = "3dresnet"
     X3D = "x3d"
     SLOWFAST = "slowfast"

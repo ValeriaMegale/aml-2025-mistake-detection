@@ -26,6 +26,8 @@ def fetch_input_dim(config, decoder=False):
             return 1024
         k = len(config.modality)
         return 1024 * k
+    elif config.backbone == const.PERCEPTION:
+        return 768
 
 
 
