@@ -26,6 +26,8 @@ def fetch_input_dim(config, decoder=False):
             return 1024
         k = len(config.modality)
         return 1024 * k
+    elif config.backbone == const.PERCEPTION:
+        return 768
 
 
 
@@ -48,7 +50,7 @@ class RNNBaseline(nn.Module):
         self.hidden_dim = hidden_dim
         self.num_layers = num_layers
         
-        # LSTM Layer
+        # LSTM Layer con dropout
         # batch_first=True si aspetta input (Batch, Seq_Len, Features)
         self.lstm = nn.LSTM(input_dim, hidden_dim, num_layers, batch_first=True, dropout=dropout)
         
@@ -71,6 +73,9 @@ class RNNBaseline(nn.Module):
         # hn shape: [num_layers, batch_size, hidden_dim]
         # cn shape: [num_layers, batch_size, hidden_dim]
         lstm_out, (hn, cn) = self.lstm(x)
+        
+        # Applica dropout dopo LSTM
+        lstm_out = self.dropout(lstm_out)
         
         # Applica il fully connected layer a ogni timestep dell'output LSTM
         # lstm_out shape: [batch_size, seq_len, hidden_dim]
