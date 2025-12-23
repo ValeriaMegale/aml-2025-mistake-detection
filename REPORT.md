@@ -160,6 +160,8 @@ The LSTM should theoretically handle the sequential nature of videos better than
 |-------|----------|-------|----------|-----------|--------|-----|-----|
 | MLP | Omnivore | step | 0.71 | 0.66 | 0.15 | 0.24 | 0.76 |
 | MLP | Omnivore | sub-step | 0.68 | 0.41 | 0.30 | 0.35 | 0.65 |
+| Transformer | Omnivore | step | 0.70 | 0.52 | 0.60 | 0.55 | 0.76 |
+| Transformer | Omnivore | sub-step | 0.67 | 0.44 | 0.66 | 0.53 | 0.75 |
 
 ### 4.2 Error Type Performance Comparison
 
