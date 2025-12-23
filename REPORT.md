@@ -158,12 +158,8 @@ The LSTM should theoretically handle the sequential nature of videos better than
 
 | Model | Backbone | Split | Accuracy | Precision | Recall | F1 | AUC |
 |-------|----------|-------|----------|-----------|--------|-----|-----|
-| MLP | Omnivore | recordings | - | - | - | - | - |
-| MLP | SlowFast | recordings | - | - | - | - | - |
-| Transformer | Omnivore | recordings | - | - | - | - | - |
-| Transformer | SlowFast | recordings | - | - | - | - | - |
-| RNN/LSTM | Omnivore | recordings | - | - | - | - | - |
-| RNN/LSTM | SlowFast | recordings | - | - | - | - | - |
+| MLP | Omnivore | step | 0.71 | 0.66 | 0.15 | 0.24 | 0.76 |
+| MLP | Omnivore | sub-step | 0.68 | 0.41 | 0.30 | 0.35 | 0.65 |
 
 ### 4.2 Error Type Performance Comparison
 
