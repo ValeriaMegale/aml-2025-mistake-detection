@@ -46,15 +46,15 @@ def fetch_model_name_ecr(config):
 def fetch_model(config):
     model = None
     if config.variant == const.MLP_VARIANT:
-        if config.backbone in [const.OMNIVORE, const.RESNET3D, const.X3D, const.SLOWFAST, const.IMAGEBIND]:
+        if config.backbone in [const.OMNIVORE, const.RESNET3D, const.X3D, const.SLOWFAST, const.IMAGEBIND, const.PERCEPTION]:
             input_dim = fetch_input_dim(config)
             model = MLP(input_dim, 512, 1)
     elif config.variant == const.TRANSFORMER_VARIANT:
-        if config.backbone in [const.OMNIVORE, const.RESNET3D, const.X3D, const.SLOWFAST, const.IMAGEBIND]:
+        if config.backbone in [const.OMNIVORE, const.RESNET3D, const.X3D, const.SLOWFAST, const.IMAGEBIND, const.PERCEPTION]:
             model = ErFormer(config)
             
     elif config.variant == const.RNN_VARIANT:
-        if config.backbone in [const.OMNIVORE, const.RESNET3D, const.X3D, const.SLOWFAST, const.IMAGEBIND]:
+        if config.backbone in [const.OMNIVORE, const.RESNET3D, const.X3D, const.SLOWFAST, const.IMAGEBIND, const.PERCEPTION]:
             input_dim = fetch_input_dim(config)
             # Usa parametri simili a quelli comuni per RNN
             hidden_dim = 128
