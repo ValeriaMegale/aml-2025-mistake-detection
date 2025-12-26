@@ -158,6 +158,23 @@ The LSTM should theoretically handle the sequential nature of videos better than
 
 | Model | Backbone | Split | Accuracy | Precision | Recall | F1 | AUC |
 |-------|----------|-------|----------|-----------|--------|-----|-----|
+ 
+### 4.1.1 Combinazioni Parametri-Feature-Modello e Stato Checkpoint
+
+| Parametri      | Feature        | Modello      | Checkpoint presente? |
+|----------------|---------------|--------------|----------------------|
+| Vecchi         | Vecchie       | MLP          | Sì                   |
+| Vecchi         | Vecchie       | Transformer  | Sì                   |
+| Vecchi         | Vecchie       | RNN          | No                   |
+| Nuovi          | Vecchie       | MLP          | Sì                   |
+| Nuovi          | Vecchie       | Transformer  | Sì                   |
+| Nuovi          | Vecchie       | RNN          | No                   |
+| Vecchi         | Nuove         | MLP          | No                   |
+| Vecchi         | Nuove         | Transformer  | No                   |
+| Vecchi         | Nuove         | RNN          | No                   |
+| Nuovi          | Nuove         | MLP          | No                   |
+| Nuovi          | Nuove         | Transformer  | No                   |
+| Nuovi          | Nuove         | RNN          | No                   |
 | MLP | Omnivore | step | 0.71 | 0.66 | 0.15 | 0.24 | 0.76 |
 | MLP | Omnivore | sub-step | 0.68 | 0.41 | 0.30 | 0.35 | 0.65 |
 | Transformer | Omnivore | step | 0.70 | 0.52 | 0.60 | 0.55 | 0.76 |
