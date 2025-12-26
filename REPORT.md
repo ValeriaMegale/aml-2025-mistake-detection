@@ -156,6 +156,33 @@ The LSTM should theoretically handle the sequential nature of videos better than
 
 *[Table to be completed with training results]*
 
+---
+
+### 4.1.2 Documentazione Parametri Vecchi e Nuovi
+
+**Parametri iniziali (vecchi, primi commit):**
+- batch_size: 32
+- num_epochs: 100
+- learning rate (lr): 0.001
+- weight_decay: 1e-4
+
+**Parametri attuali (nuovi, commit più recenti):**
+- batch_size: 128
+- test_batch_size: 1
+- num_epochs: 100
+- learning rate (lr): 5e-4
+- weight_decay: 5e-3
+- hidden_dim (LSTM): 128
+- num_layers (LSTM): 2
+- dropout (LSTM): 0.5
+
+**Altri cambiamenti:**
+- Aggiunti parametri come log_interval, dry_run, seed, ecc.
+- Modificata la struttura delle MLP (layer aggiunti/rimossi).
+- hidden_dim e dropout modificati in commit specifici.
+
+Questa tabella permette di tracciare chiaramente l’evoluzione dei parametri tra “vecchi” e “nuovi” per ogni esperimento.
+
 | Model | Backbone | Split | Accuracy | Precision | Recall | F1 | AUC |
 |-------|----------|-------|----------|-----------|--------|-----|-----|
  
