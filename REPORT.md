@@ -156,6 +156,18 @@ The LSTM should theoretically handle the sequential nature of videos better than
 
 *[Table to be completed with training results]*
 
+### 4.1.3 Risultati delle Run (wandb export)
+
+| Modello      | Backbone    | Split | Batch Size | LR     | Epoche | Accuracy (test) | F1 (test) | AUC (test) | Precision (test) | Recall (test) |
+|--------------|-------------|-------|------------|--------|--------|-----------------|-----------|------------|------------------|---------------|
+| RNN          | perception  | step  | 128        | 0.0005 | 100    | 0.6927          | 0.7645    | 0.7419     | 0.4449           | 0.6303        |
+| Transformer  | perception  | step  | 128        | 0.0005 | 100    | 0.6775          | 0.8154    | 0.7494     | 0.4401           | 0.8182        |
+| MLP          | perception  | step  | 128        | 0.0005 | 100    | 0.7217          | 0.7495    | 0.7143     | 0.4096           | 0.5600        |
+
+*Tutte le run sono state eseguite con modality = video, weight_decay = 0.005, seed = 42, feature directory = data/.*
+
+**Nota:** I risultati sono estratti dal file wandb_export_2025-12-27T12_01_32.634+01_00.csv. Per ogni run sono riportate le metriche principali sul test set. Altre metriche (sub-step, validazione) sono disponibili nel file esportato.
+
 ---
 
 ### 4.1.2 Documentazione Parametri Vecchi e Nuovi
