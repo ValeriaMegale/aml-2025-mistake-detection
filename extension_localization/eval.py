@@ -95,7 +95,9 @@ def main(args):
 
     """3. create model and evaluator"""
     if args.backbone == 'omnivore':
-        cfg['model']['input_dim'] = 1024
+        # FIX: Forziamo le dimensioni per farle combaciare con il checkpoint che hai scaricato
+        cfg['model']['input_dim'] = 1536
+        cfg['model']['num_classes'] = 110
     elif args.backbone == 'videomae':
         cfg['model']['input_dim'] = 400
     elif args.backbone == '3dresnet':
@@ -115,8 +117,7 @@ def main(args):
     # load ckpt, reset epoch / best rmse
     checkpoint = torch.load(
         ckpt_file,
-        map_location = lambda storage, loc: storage.cuda(cfg['devices'][0])
-    )
+        map_location = cfg['devices'][0])
     # load ema model instead
     print("Loading from EMA model ...")
     model.load_state_dict(checkpoint['state_dict_ema'])
