@@ -126,37 +126,7 @@ We analyzed model performance across different error categories using the `evalu
 To better capture temporal dependencies between video snippets within a recipe step, we implemented a Recurrent Neural Network based on Long Short-Term Memory (LSTM) units. Unlike the MLP baseline, which processes aggregated features, the LSTM processes the sequence of frame features step-by-step.
 
 ```python
-class RNNBaseline(nn.Module):
-    def __init__(self, input_dim=1024, hidden_dim=128, num_layers=2):
-        super(RNNBaseline, self).__init__()
-        self.lstm = nn.LSTM(input_dim, hidden_dim, num_layers, batch_first=True)
-        self.dropout = nn.Dropout(0.5)
-        self.fc = nn.Linear(hidden_dim, 1)
-    
-    def forward(self, x):
-        _, (h_n, _) = self.lstm(x)
-        out = self.dropout(h_n[-1])
-        return self.fc(out)
-```
-
-**Design Choices:**
-- **2 LSTM layers** for hierarchical temporal processing
-- **Dropout (0.5)** for regularization against overfitting
-- **Hidden dimension 128** to match MLP capacity for fair comparison
-- **BCEWithLogitsLoss** with pos_weight=1.5 to handle class imbalance
-
-**Rationale:**
-The LSTM should theoretically handle the sequential nature of videos better than the MLP (which treats segments in isolation or aggregates them simply). By using the final hidden state as a compact summary of the entire action sequence, we capture temporal patterns that may indicate errors developing over time.
-
----
-
-## 4. Results
-
-### 4.1 Comparison Across Models
-
-*[Table to be completed with training results]*
-
-### 4.1.3 Risultati delle Run (wandb export)
+### 4.1 Risultati delle Run (wandb export)
 
 | Modello      | Backbone    | Split | Batch Size | LR     | Epoche | Accuracy (test) | F1 (test) | AUC (test) | Precision (test) | Recall (test) |
 |--------------|-------------|-------|------------|--------|--------|-----------------|-----------|------------|------------------|---------------|
@@ -169,44 +139,22 @@ The LSTM should theoretically handle the sequential nature of videos better than
 **Nota:** I risultati sono estratti dal file wandb_export_2025-12-27T12_01_32.634+01_00.csv. Per ogni run sono riportate le metriche principali sul test set. Altre metriche (sub-step, validazione) sono disponibili nel file esportato.
 
 ---
+#### Parametri principali usati negli esperimenti
 
-### 4.1.2 Documentazione Parametri Vecchi e Nuovi
+| Parametro         | Vecchio valore | Nuovo valore |
+|-------------------|---------------|--------------|
+| batch_size        | 32            | 128          |
+| num_epochs        | 100           | 100          |
+| learning rate (lr)| 0.001         | 0.0005       |
+| weight_decay      | 1e-4          | 0.005        |
+| test_batch_size   | -             | 1            |
+| hidden_dim (LSTM) | -             | 128          |
+| num_layers (LSTM) | -             | 2            |
+| dropout (LSTM)    | -             | 0.5          |
 
-**Parametri iniziali (vecchi, primi commit):**
-- batch_size: 32
-- num_epochs: 100
-- learning rate (lr): 0.001
-- weight_decay: 1e-4
+Altri parametri aggiunti: log_interval, dry_run, seed, ecc. Alcune modifiche strutturali alle MLP (layer aggiunti/rimossi) e ai parametri LSTM sono state introdotte in commit specifici.
 
-**Parametri attuali (nuovi, commit più recenti):**
-- batch_size: 128
-- test_batch_size: 1
-- num_epochs: 100
-- learning rate (lr): 5e-4
-- weight_decay: 5e-3
-- hidden_dim (LSTM): 128
-- num_layers (LSTM): 2
-- dropout (LSTM): 0.5
-
-**Altri cambiamenti:**
-- Aggiunti parametri come log_interval, dry_run, seed, ecc.
-- Modificata la struttura delle MLP (layer aggiunti/rimossi).
-- hidden_dim e dropout modificati in commit specifici.
-
-Questa tabella permette di tracciare chiaramente l’evoluzione dei parametri tra “vecchi” e “nuovi” per ogni esperimento.
-
-| Model | Backbone | Split | Accuracy | Precision | Recall | F1 | AUC |
-|-------|----------|-------|----------|-----------|--------|-----|-----|
- 
-### 4.1.1 Combinazioni Parametri-Feature-Modello e Stato Checkpoint
-
-| Parametri      | Feature        | Modello      | Checkpoint presente? |
-|----------------|---------------|--------------|----------------------|
-| Vecchi         | Vecchie       | MLP          | Sì                   |
-| Vecchi         | Vecchie       | Transformer  | Sì                   |
-| Vecchi         | Vecchie       | RNN          | No                   |
-| Nuovi          | Vecchie       | MLP          | Sì                   |
-| Nuovi          | Vecchie       | Transformer  | Sì                   |
+---
 | Nuovi          | Vecchie       | RNN          | No                   |
 | Vecchi         | Nuove         | MLP          | No                   |
 | Vecchi         | Nuove         | Transformer  | No                   |
@@ -219,20 +167,6 @@ Questa tabella permette di tracciare chiaramente l’evoluzione dei parametri tr
 | Transformer | Omnivore | step | 0.70 | 0.52 | 0.60 | 0.55 | 0.76 |
 | Transformer | Omnivore | sub-step | 0.67 | 0.44 | 0.66 | 0.53 | 0.75 |
 
-### 4.2 Error Type Performance Comparison
-
-*[To be completed with evaluate_by_error_type.py results]*
-
-| Error Type | MLP | Transformer | RNN/LSTM |
-|------------|-----|-------------|----------|
-| Technique Error | - | - | - |
-| Measurement Error | - | - | - |
-| Preparation Error | - | - | - |
-| Temperature Error | - | - | - |
-| Timing Error | - | - | - |
-| No Error | - | - | - |
-
----
 
 ## 5. Conclusions
 
