@@ -153,10 +153,27 @@ class ActivityNetDataset(Dataset):
                     dtype=np.float32
                 )
         else:
+            # FIX: Aggiungiamo il suffisso specifico dei file generati
+            suffix = "_360p.mp4_1s_1s"
             filename = os.path.join(self.feat_folder,
-                                    self.file_prefix + video_item['id'] + self.file_ext)
+                                    self.file_prefix + video_item['id'] + suffix + self.file_ext)
             print("DEBUG FILENAME", filename)
-            feats = np.load(filename).astype(np.float32)
+            loaded = np.load(filename)
+
+            if 'feats' in loaded:
+                feats = loaded['feats'].astype(np.float32)
+            elif 'arr_0' in loaded:
+                feats = loaded['arr_0'].astype(np.float32)
+            else:
+                # Fallback: prendiamo il primo array disponibile
+                keys = list(loaded.keys())
+                feats = loaded[keys[0]].astype(np.float32)
+                # FIX: Padding delle feature da 1024 a 1536 per accontentare il checkpoint
+            if feats.shape[1] == 1024 :
+                # Creiamo un cuscinetto di zeri
+                padding = np.zeros((feats.shape[0], 512), dtype=np.float32)
+                # Incolliamo il cuscinetto alle feature: 1024 + 512 = 1536
+                feats = np.concatenate((feats, padding), axis=1)
         print("DEBUG FEATS SHAPE", feats.shape)
         # we support both fixed length features / variable length features
         # case 1: variable length features for training

@@ -90,8 +90,7 @@ def main(args):
         if os.path.isfile(args.resume):
             # load ckpt, reset epoch / best rmse
             checkpoint = torch.load(args.resume,
-                map_location = lambda storage, loc: storage.cuda(
-                    cfg['devices'][0]))
+                map_location = cfg['devices'][0])
             args.start_epoch = checkpoint['epoch']
             model.load_state_dict(checkpoint['state_dict'])
             model_ema.module.load_state_dict(checkpoint['state_dict_ema'])

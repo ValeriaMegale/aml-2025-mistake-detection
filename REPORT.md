@@ -71,8 +71,8 @@ We reproduced three baseline architectures for error recognition:
 - **Input:** Sequence of feature vectors
 - **Output:** Binary classification with temporal attention
 
-#### V3: RNN/LSTM Baseline (New)
-- **Architecture:** LSTM(input_dim, hidden_dim=128, num_layers=2) → Dropout(0.5) → Linear(128, 1)
+#### V3: RNN Baseline (New)
+- **Architecture:** RNN(input_dim, hidden_dim, num_layers) → Dropout(0.5) → Linear(128, 1)
 - **Input:** Sequence of feature vectors
 - **Mechanism:** Uses the final hidden state as a summary of the entire action sequence
 - **Rationale:** Captures temporal dependencies between video snippets within a recipe step
@@ -121,7 +121,7 @@ We analyzed model performance across different error categories using the `evalu
 - This class imbalance (691 normal vs <70 error samples per category) causes high false positive rates
 - The models tend to over-predict errors (high Recall for error classes, but low Precision globally)
 
-### 3.3 New Baseline: RNN/LSTM
+### 3.3 New Baseline: RNN
 
 To better capture temporal dependencies between video snippets within a recipe step, we implemented a Recurrent Neural Network based on Long Short-Term Memory (LSTM) units. Unlike the MLP baseline, which processes aggregated features, the LSTM processes the sequence of frame features step-by-step.
 
@@ -140,13 +140,13 @@ class RNNBaseline(nn.Module):
 ```
 
 **Design Choices:**
-- **2 LSTM layers** for hierarchical temporal processing
+- **RNN** for hierarchical temporal processing
 - **Dropout (0.5)** for regularization against overfitting
 - **Hidden dimension 128** to match MLP capacity for fair comparison
 - **BCEWithLogitsLoss** with pos_weight=1.5 to handle class imbalance
 
 **Rationale:**
-The LSTM should theoretically handle the sequential nature of videos better than the MLP (which treats segments in isolation or aggregates them simply). By using the final hidden state as a compact summary of the entire action sequence, we capture temporal patterns that may indicate errors developing over time.
+The RNN should theoretically handle the sequential nature of videos better than the MLP (which treats segments in isolation or aggregates them simply). By using the final hidden state as a compact summary of the entire action sequence, we capture temporal patterns that may indicate errors developing over time.
 
 ---
 
