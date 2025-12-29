@@ -1,17 +1,17 @@
-dataset_name: error_dataset
+dataset_name: anet
 train_split: ['training', 'validation']
-val_split: ['test']
+val_split: ['validation']
 dataset: {
   backbone: omnivore,
   division_type: recordings,
   videos_type: 'all',
-  json_file: ./annotations/annotations_actionformer.json,
-  feat_folder: './data/error_dataset/features/omnivore_swinB_epic',
+  json_file: ./data/captaincook.json,
+  feat_folder: './../data/video/omnivore',
   file_prefix: ~,
   file_suffix: '_360p',
   file_ext: .npz,
   num_classes: 353,
-  input_dim: 1024,
+  input_dim: 1536,
   feat_stride: 30,
   num_frames: 90,
   default_fps: 29.97,

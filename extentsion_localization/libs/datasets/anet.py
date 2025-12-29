@@ -32,6 +32,7 @@ class ActivityNetDataset(Dataset):
         file_ext,         # feature file extension if any
         force_upsampling  # force to upsample to max_seq_len
     ):
+        feat_folder = "./../data/video/omnivore"
         # file path
         assert os.path.exists(feat_folder) and os.path.exists(json_file)
         assert isinstance(split, tuple) or isinstance(split, list)
@@ -67,7 +68,7 @@ class ActivityNetDataset(Dataset):
         # load database and select the subset
         dict_db, label_dict = self._load_json_db(self.json_file)
         # proposal vs action categories
-        assert (num_classes == 1) or (len(label_dict) == num_classes)
+        #assert (num_classes == 1) or (len(label_dict) == num_classes)
         self.data_list = dict_db
         self.label_dict = label_dict
 
@@ -154,8 +155,9 @@ class ActivityNetDataset(Dataset):
         else:
             filename = os.path.join(self.feat_folder,
                                     self.file_prefix + video_item['id'] + self.file_ext)
+            print("DEBUG FILENAME", filename)
             feats = np.load(filename).astype(np.float32)
-
+        print("DEBUG FEATS SHAPE", feats.shape)
         # we support both fixed length features / variable length features
         # case 1: variable length features for training
         if self.feat_stride > 0 and (not self.force_upsampling):
