@@ -180,6 +180,57 @@ Altri parametri aggiunti: log_interval, dry_run, seed, ecc. Alcune modifiche str
 - Precision: 0.5849
 - Recall: 0.5084
 
+## 4.2 Risultati Evaluation per Error Type (core/evaluate_by_error_type.py)
+
+**Modello:** RNN (perception, step split, checkpoint RNN_epoch_20.pt)
+
+```
+=====================================================================================
+RISULTATI ANALISI PER TIPO DI ERRORE
+=====================================================================================
+
+Categoria                  Samples        Acc       Prec     Recall         F1        AUC
+-------------------------------------------------------------------------------------
+GLOBAL                         798      62.91      42.49      53.41      47.33      66.00
+-------------------------------------------------------------------------------------
+Technique Error                 62      61.29     100.00      61.29      76.00        N/A
+Preparation Error               49      44.90     100.00      44.90      61.97        N/A
+Temperature Error                8      50.00     100.00      50.00      66.67        N/A
+Measurement Error               42      59.52     100.00      59.52      74.63        N/A
+Timing Error                    34      50.00     100.00      50.00      66.67        N/A
+No Error                       691      64.11      29.13      52.11      37.37      65.53
+=====================================================================================
+```
+
+*Risultati generati da core/evaluate_by_error_type.py su checkpoint RNN_epoch_20.pt (perception, step split).*
+
+## 4.3 Risultati Evaluation Globale RNN (core/evaluate.py)
+
+**Modello:** RNN (perception, step split, checkpoint RNN_epoch_20.pt)
+
+- Accuracy globale: 62.91%
+- Precision: 42.49%
+- Recall: 53.41%
+- F1: 47.33%
+- AUC: 66.00%
+
+*Risultati generati da core/evaluate.py su checkpoint RNN_epoch_20.pt (perception, step split).*
+
+## 4.4 Risultati RNN per Categoria di Errore (core/evaluate_by_error_type.py)
+
+**Modello:** RNN (perception, step split, checkpoint RNN_epoch_20.pt)
+
+| Categoria           | Samples | Accuracy | Precision | Recall | F1    | AUC   |
+|---------------------|---------|----------|-----------|--------|-------|-------|
+| Technique Error     | 62      | 61.29    | 100.00    | 61.29  | 76.00 | N/A   |
+| Preparation Error   | 49      | 44.90    | 100.00    | 44.90  | 61.97 | N/A   |
+| Temperature Error   | 8       | 50.00    | 100.00    | 50.00  | 66.67 | N/A   |
+| Measurement Error   | 42      | 59.52    | 100.00    | 59.52  | 74.63 | N/A   |
+| Timing Error        | 34      | 50.00    | 100.00    | 50.00  | 66.67 | N/A   |
+| No Error            | 691     | 64.11    | 29.13     | 52.11  | 37.37 | 65.53 |
+
+*Risultati generati da core/evaluate_by_error_type.py su checkpoint RNN_epoch_20.pt (perception, step split).*
+
 ## 5. Conclusions
 
 ### Key Findings
