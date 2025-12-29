@@ -56,7 +56,7 @@ def main(args):
     print(f"Output folder name: {output_folder_name}")
     # ToDo: override the args.ckpt with the cfg generated ckpt folder
     dataset_name = cfg['dataset_name']
-    args.ckpt = os.path.join(cfg['output_folder'], dataset_name, output_folder_name + '_' + str(args.ckpt))
+    #args.ckpt = os.path.join(cfg['output_folder'], dataset_name, output_folder_name + '_' + str(args.ckpt))
 
     if ".pth.tar" in args.ckpt:
         assert os.path.isfile(args.ckpt), "CKPT file does not exist!"
@@ -78,6 +78,11 @@ def main(args):
     """1. fix all randomness"""
     # fix the random seeds (this will fix everything)
     _ = fix_random_seed(0, include_cuda=True)
+
+    keys_to_remove = ['backbone', 'division_type', 'videos_type', 'file_suffix']
+    for key in keys_to_remove:
+        if key in cfg['dataset']:
+            del cfg['dataset'][key]
 
     """2. create dataset / dataloader"""
     val_dataset = make_dataset(
