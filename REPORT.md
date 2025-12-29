@@ -162,8 +162,6 @@ The LSTM should theoretically handle the sequential nature of videos better than
 | Transformer  | perception  | nuove feature   | nuovi parametri   | 27    | Sì         | 0.7288 (step)   | 0.5919    | 0.7834     | 0.6439           | 0.5477        |
 
 
-*Checkpoint salvato in: checkpoints/error_recognition_best/Transformer/nwe_features_new_params/Transformer_epoch_27.pt*
-
 **Sub Step Level:**
 - F1: 0.5440
 - Accuracy: 0.7197
@@ -171,7 +169,6 @@ The LSTM should theoretically handle the sequential nature of videos better than
 - Precision: 0.5849
 - Recall: 0.5084
 
-**Nota:** I risultati saranno aggiornati dopo l'evaluation.
 
 ### 4.1.3 Risultati delle Run (wandb export)
 
