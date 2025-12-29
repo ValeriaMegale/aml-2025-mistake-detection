@@ -152,9 +152,26 @@ The LSTM should theoretically handle the sequential nature of videos better than
 
 ## 4. Results
 
+
 ### 4.1 Comparison Across Models
 
-*[Table to be completed with training results]*
+### 4.1.4 Nuovo Checkpoint: Transformer con nuove feature e nuovi parametri
+
+| Modello      | Backbone    | Feature         | Parametri         | Epoca | Checkpoint | Accuracy (test) | F1 (test) | AUC (test) | Precision (test) | Recall (test) |
+|--------------|-------------|-----------------|-------------------|-------|------------|-----------------|-----------|------------|------------------|---------------|
+| Transformer  | perception  | nuove feature   | nuovi parametri   | 27    | Sì         | 0.7288 (step)   | 0.5919    | 0.7834     | 0.6439           | 0.5477        |
+
+
+*Checkpoint salvato in: checkpoints/error_recognition_best/Transformer/nwe_features_new_params/Transformer_epoch_27.pt*
+
+**Sub Step Level:**
+- F1: 0.5440
+- Accuracy: 0.7197
+- AUC: 0.7568
+- Precision: 0.5849
+- Recall: 0.5084
+
+**Nota:** I risultati saranno aggiornati dopo l'evaluation.
 
 ### 4.1.3 Risultati delle Run (wandb export)
 
