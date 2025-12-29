@@ -168,6 +168,19 @@ Altri parametri aggiunti: log_interval, dry_run, seed, ecc. Alcune modifiche str
 | Transformer | Omnivore | sub-step | 0.67 | 0.44 | 0.66 | 0.53 | 0.75 |
 
 
+### 4.1.4 Nuovo Checkpoint: Transformer con nuove feature e nuovi parametri
+
+| Modello      | Backbone    | Feature         | Parametri         | Epoca | Checkpoint | Accuracy (test) | F1 (test) | AUC (test) | Precision (test) | Recall (test) |
+|--------------|-------------|-----------------|-------------------|-------|------------|-----------------|-----------|------------|------------------|---------------|
+| Transformer  | perception  | nuove feature   | nuovi parametri   | 27    | Sì         | 0.7288 (step)   | 0.5919    | 0.7834     | 0.6439           | 0.5477        |
+
+**Sub Step Level:**
+- F1: 0.5440
+- Accuracy: 0.7197
+- AUC: 0.7568
+- Precision: 0.5849
+- Recall: 0.5084
+
 ## 5. Conclusions
 
 ### Key Findings
