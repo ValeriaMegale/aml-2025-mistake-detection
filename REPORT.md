@@ -121,11 +121,10 @@ We analyzed model performance across different error categories using the `evalu
 - This class imbalance (691 normal vs <70 error samples per category) causes high false positive rates
 - The models tend to over-predict errors (high Recall for error classes, but low Precision globally)
 
-### 3.3 New Baseline: RNN/LSTM
 
+### 3.3 New Baseline: RNN/LSTM
 To better capture temporal dependencies between video snippets within a recipe step, we implemented a Recurrent Neural Network based on Long Short-Term Memory (LSTM) units. Unlike the MLP baseline, which processes aggregated features, the LSTM processes the sequence of frame features step-by-step.
 
-```python
 ### 4.1 Risultati delle Run (wandb export)
 
 | Modello      | Backbone    | Split | Batch Size | LR     | Epoche | Accuracy (test) | F1 (test) | AUC (test) | Precision (test) | Recall (test) |
