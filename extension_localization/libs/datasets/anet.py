@@ -157,7 +157,7 @@ class ActivityNetDataset(Dataset):
             suffix = "_360p.mp4_1s_1s"
             filename = os.path.join(self.feat_folder,
                                     self.file_prefix + video_item['id'] + suffix + self.file_ext)
-            print("DEBUG FILENAME", filename)
+            #print("DEBUG FILENAME", filename)
             loaded = np.load(filename)
 
             if 'feats' in loaded:
@@ -174,7 +174,7 @@ class ActivityNetDataset(Dataset):
                 padding = np.zeros((feats.shape[0], 512), dtype=np.float32)
                 # Incolliamo il cuscinetto alle feature: 1024 + 512 = 1536
                 feats = np.concatenate((feats, padding), axis=1)
-        print("DEBUG FEATS SHAPE", feats.shape)
+        #print("DEBUG FEATS SHAPE", feats.shape)
         # we support both fixed length features / variable length features
         # case 1: variable length features for training
         if self.feat_stride > 0 and (not self.force_upsampling):
