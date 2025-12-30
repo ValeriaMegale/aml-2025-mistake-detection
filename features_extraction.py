@@ -116,7 +116,7 @@ def main(args):
     # batch_size=1 perché ogni "item" è un intero video (che contiene N frame)
     # num_workers=2: Due processi CPU caricano i video mentre la GPU ne elabora un altro
     dataset = VideoDataset(video_list, encoder.preprocess)
-    loader = DataLoader(dataset, batch_size=1, shuffle=False, num_workers=2, collate_fn=collate_fn)
+    loader = DataLoader(dataset, batch_size=1, shuffle=False, num_workers=0, collate_fn=collate_fn)
 
     for data in tqdm(loader, desc="Processing"):
         if data is None: continue
