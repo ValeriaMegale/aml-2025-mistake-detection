@@ -121,23 +121,12 @@ We analyzed model performance across different error categories using the `evalu
 - This class imbalance (691 normal vs <70 error samples per category) causes high false positive rates
 - The models tend to over-predict errors (high Recall for error classes, but low Precision globally)
 
+
 ### 3.3 New Baseline: RNN
 
 To better capture temporal dependencies between video snippets within a recipe step, we implemented a Recurrent Neural Network based on Long Short-Term Memory (LSTM) units. Unlike the MLP baseline, which processes aggregated features, the LSTM processes the sequence of frame features step-by-step.
 
-```python
-class RNNBaseline(nn.Module):
-    def __init__(self, input_dim=1024, hidden_dim=128, num_layers=2):
-        super(RNNBaseline, self).__init__()
-        self.lstm = nn.LSTM(input_dim, hidden_dim, num_layers, batch_first=True)
-        self.dropout = nn.Dropout(0.5)
-        self.fc = nn.Linear(hidden_dim, 1)
-    
-    def forward(self, x):
-        _, (h_n, _) = self.lstm(x)
-        out = self.dropout(h_n[-1])
-        return self.fc(out)
-```
+### 4.1 Risultati delle Run (wandb export)
 
 **Design Choices:**
 - **RNN** for hierarchical temporal processing
@@ -147,36 +136,110 @@ class RNNBaseline(nn.Module):
 
 **Rationale:**
 The RNN should theoretically handle the sequential nature of videos better than the MLP (which treats segments in isolation or aggregates them simply). By using the final hidden state as a compact summary of the entire action sequence, we capture temporal patterns that may indicate errors developing over time.
+=======
+| Modello      | Backbone    | Split | Batch Size | LR     | Epoche | Accuracy (test) | F1 (test) | AUC (test) | Precision (test) | Recall (test) |
+|--------------|-------------|-------|------------|--------|--------|-----------------|-----------|------------|------------------|---------------|
+| RNN          | perception  | step  | 128        | 0.0005 | 100    | 0.6927          | 0.7645    | 0.7419     | 0.4449           | 0.6303        |
+| Transformer  | perception  | step  | 128        | 0.0005 | 100    | 0.6775          | 0.8154    | 0.7494     | 0.4401           | 0.8182        |
+| MLP          | perception  | step  | 128        | 0.0005 | 100    | 0.7217          | 0.7495    | 0.7143     | 0.4096           | 0.5600        |
+
+*Tutte le run sono state eseguite con modality = video, weight_decay = 0.005, seed = 42, feature directory = data/.*
+
+**Nota:** I risultati sono estratti dal file wandb_export_2025-12-27T12_01_32.634+01_00.csv. Per ogni run sono riportate le metriche principali sul test set. Altre metriche (sub-step, validazione) sono disponibili nel file esportato.
 
 ---
+#### Parametri principali usati negli esperimenti
 
-## 4. Results
+| Parametro         | Vecchio valore | Nuovo valore |
+|-------------------|---------------|--------------|
+| batch_size        | 32            | 128          |
+| num_epochs        | 100           | 100          |
+| learning rate (lr)| 0.001         | 0.0005       |
+| weight_decay      | 1e-4          | 0.005        |
+| test_batch_size   | -             | 1            |
+| hidden_dim (LSTM) | -             | 128          |
+| num_layers (LSTM) | -             | 2            |
+| dropout (LSTM)    | -             | 0.5          |
 
-### 4.1 Comparison Across Models
+Altri parametri aggiunti: log_interval, dry_run, seed, ecc. Alcune modifiche strutturali alle MLP (layer aggiunti/rimossi) e ai parametri LSTM sono state introdotte in commit specifici.
 
-*[Table to be completed with training results]*
-
-| Model | Backbone | Split | Accuracy | Precision | Recall | F1 | AUC |
-|-------|----------|-------|----------|-----------|--------|-----|-----|
+---
+| Nuovi          | Vecchie       | RNN          | No                   |
+| Vecchi         | Nuove         | MLP          | No                   |
+| Vecchi         | Nuove         | Transformer  | No                   |
+| Vecchi         | Nuove         | RNN          | No                   |
+| Nuovi          | Nuove         | MLP          | No                   |
+| Nuovi          | Nuove         | Transformer  | No                   |
+| Nuovi          | Nuove         | RNN          | No                   |
 | MLP | Omnivore | step | 0.71 | 0.66 | 0.15 | 0.24 | 0.76 |
 | MLP | Omnivore | sub-step | 0.68 | 0.41 | 0.30 | 0.35 | 0.65 |
 | Transformer | Omnivore | step | 0.70 | 0.52 | 0.60 | 0.55 | 0.76 |
 | Transformer | Omnivore | sub-step | 0.67 | 0.44 | 0.66 | 0.53 | 0.75 |
 
-### 4.2 Error Type Performance Comparison
 
-*[To be completed with evaluate_by_error_type.py results]*
+### 4.1.4 Nuovo Checkpoint: Transformer con nuove feature e nuovi parametri
 
-| Error Type | MLP | Transformer | RNN/LSTM |
-|------------|-----|-------------|----------|
-| Technique Error | - | - | - |
-| Measurement Error | - | - | - |
-| Preparation Error | - | - | - |
-| Temperature Error | - | - | - |
-| Timing Error | - | - | - |
-| No Error | - | - | - |
+| Modello      | Backbone    | Feature         | Parametri         | Epoca | Checkpoint | Accuracy (test) | F1 (test) | AUC (test) | Precision (test) | Recall (test) |
+|--------------|-------------|-----------------|-------------------|-------|------------|-----------------|-----------|------------|------------------|---------------|
+| Transformer  | perception  | nuove feature   | nuovi parametri   | 27    | Sì         | 0.7288 (step)   | 0.5919    | 0.7834     | 0.6439           | 0.5477        |
 
----
+**Sub Step Level:**
+- F1: 0.5440
+- Accuracy: 0.7197
+- AUC: 0.7568
+- Precision: 0.5849
+- Recall: 0.5084
+
+## 4.2 Risultati Evaluation per Error Type (core/evaluate_by_error_type.py)
+
+**Modello:** RNN (perception, step split, checkpoint RNN_epoch_20.pt)
+
+```
+=====================================================================================
+RISULTATI ANALISI PER TIPO DI ERRORE
+=====================================================================================
+
+Categoria                  Samples        Acc       Prec     Recall         F1        AUC
+-------------------------------------------------------------------------------------
+GLOBAL                         798      62.91      42.49      53.41      47.33      66.00
+-------------------------------------------------------------------------------------
+Technique Error                 62      61.29     100.00      61.29      76.00        N/A
+Preparation Error               49      44.90     100.00      44.90      61.97        N/A
+Temperature Error                8      50.00     100.00      50.00      66.67        N/A
+Measurement Error               42      59.52     100.00      59.52      74.63        N/A
+Timing Error                    34      50.00     100.00      50.00      66.67        N/A
+No Error                       691      64.11      29.13      52.11      37.37      65.53
+=====================================================================================
+```
+
+*Risultati generati da core/evaluate_by_error_type.py su checkpoint RNN_epoch_20.pt (perception, step split).*
+
+## 4.3 Risultati Evaluation Globale RNN (core/evaluate.py)
+
+**Modello:** RNN (perception, step split, checkpoint RNN_epoch_20.pt)
+
+- Accuracy globale: 62.91%
+- Precision: 42.49%
+- Recall: 53.41%
+- F1: 47.33%
+- AUC: 66.00%
+
+*Risultati generati da core/evaluate.py su checkpoint RNN_epoch_20.pt (perception, step split).*
+
+## 4.4 Risultati RNN per Categoria di Errore (core/evaluate_by_error_type.py)
+
+**Modello:** RNN (perception, step split, checkpoint RNN_epoch_20.pt)
+
+| Categoria           | Samples | Accuracy | Precision | Recall | F1    | AUC   |
+|---------------------|---------|----------|-----------|--------|-------|-------|
+| Technique Error     | 62      | 61.29    | 100.00    | 61.29  | 76.00 | N/A   |
+| Preparation Error   | 49      | 44.90    | 100.00    | 44.90  | 61.97 | N/A   |
+| Temperature Error   | 8       | 50.00    | 100.00    | 50.00  | 66.67 | N/A   |
+| Measurement Error   | 42      | 59.52    | 100.00    | 59.52  | 74.63 | N/A   |
+| Timing Error        | 34      | 50.00    | 100.00    | 50.00  | 66.67 | N/A   |
+| No Error            | 691     | 64.11    | 29.13     | 52.11  | 37.37 | 65.53 |
+
+*Risultati generati da core/evaluate_by_error_type.py su checkpoint RNN_epoch_20.pt (perception, step split).*
 
 ## 5. Conclusions
 
