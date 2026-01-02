@@ -1,160 +1,158 @@
+import argparse
+import os
 import pandas as pd
 import numpy as np
-import os
+from tqdm import tqdm
 
 
-def compute_step_embeddings(preds_csv_path, features_folder, output_path, fps=30, feat_stride=30):
-    """
-    Calcola l'embedding per ogni step caricando file .npz.
-    Gestisce lunghezze temporali variabili ancorandosi alla feature_dim fissa (1024).
-    """
+def load_features_from_npz(path):
+    try:
+        with np.load(path, allow_pickle=True) as data:
+            for key in ['features', 'feats', 'embedding', 'arr_0', 'data']:
+                if key in data:
+                    return data[key]
+            if len(data.files) > 0:
+                return data[data.files[0]]
+    except Exception as e:
+        return None
+    return None
 
-    # Dimensione feature fissa nota (Omnivore/I3D solitamente 1024)
-    KNOWN_FEATURE_DIM = 1024
 
-    print(f"Lettura CSV: {preds_csv_path}")
-    df = pd.read_csv(preds_csv_path)
+def build_file_map(feat_folder):
+    """Crea mappa {video_id: path} gestendo i suffissi."""
+    print(f"Indicizzazione cartella: {feat_folder}")
+    if not os.path.exists(feat_folder):
+        print("ERRORE: Cartella non trovata.")
+        return {}
+
+    files = os.listdir(feat_folder)
+    # Cerca suffisso comune
+    suffix = ""
+    for f in files:
+        if f.endswith('.npz'):
+            if '_360p.mp4_1s_1s.npz' in f:
+                suffix = '_360p.mp4_1s_1s.npz'
+            elif '_360p_1s_1s.mp4.npz' in f:
+                suffix = '_360p_1s_1s.mp4.npz'
+            elif '.npz' in f:
+                suffix = '.npz'
+            break
+
+    print(f"Suffisso rilevato: '{suffix}'")
+    file_map = {}
+    for filename in files:
+        if filename.endswith(suffix):
+            vid_id = filename.replace(suffix, "")
+            file_map[vid_id] = os.path.join(feat_folder, filename)
+
+    print(f"File mappati: {len(file_map)} (es. {list(file_map.keys())[:3]})")
+    return file_map
+
+
+def main(args):
+    # 1. Indicizzazione
+    feat_map = build_file_map(args.feat_folder)
+    if not feat_map: return
+
+    # 2. Lettura CSV e Adattamento Colonne
+    print(f"Lettura CSV: {args.preds_csv}")
+    df = pd.read_csv(args.preds_csv)
+
+    # Mappatura colonne per step_annotations.csv vs preds.csv
+    col_map = {
+        'recording_id': 'video_id',
+        'video-id': 'video_id',
+        'start_time': 'start',
+        't-start': 'start',
+        'end_time': 'end',
+        't-end': 'end',
+        'step_id': 'label',  # Usa step_id come label numerica
+        'label': 'label'
+    }
+    df.rename(columns=col_map, inplace=True)
+    df.columns = df.columns.str.strip()
+
+    # Verifica colonne essenziali
+    required = ['video_id', 'start', 'end']
+    if not all(col in df.columns for col in required):
+        print(f"ERRORE: Colonne mancanti. Trovate: {df.columns}. Servono: {required}")
+        return
+
+    # Se è il file annotations, non filtriamo per score (non c'è)
+    if 'score' in df.columns:
+        print(f"Filtro score >= {args.threshold}...")
+        df = df[df['score'] >= args.threshold]
+    else:
+        print("Modalità Ground Truth (nessuno score da filtrare).")
 
     all_step_embeddings = {}
-    unique_videos = df['video-id'].unique()
+    current_vid = None
+    current_feats = None
 
-    print(f"In elaborazione {len(unique_videos)} video...")
+    # 3. Estrazione
+    for index, row in tqdm(df.iterrows(), total=df.shape[0]):
+        video_id = str(row['video_id']).strip()
 
-    missing_files = 0
-    processed_files = 0
+        if video_id != current_vid:
+            current_vid = video_id
+            feat_path = feat_map.get(video_id)
+            # Tentativi di fallback (- vs _)
+            if not feat_path: feat_path = feat_map.get(video_id.replace('-', '_'))
+            if not feat_path: feat_path = feat_map.get(video_id.replace('_', '-'))
 
-    for video_id in unique_videos:
-        # 1. Costruzione nome file
-        filename = f"{video_id}_360p.mp4_1s_1s.npz"
-        feat_file = os.path.join(features_folder, filename)
-
-        if not os.path.exists(feat_file):
-            print(f"⚠️ File non trovato: {filename}")
-            missing_files += 1
-            continue
-
-        try:
-            # 2. Caricamento .npz
-            with np.load(feat_file) as data:
-                keys = list(data.files)  # .files è l'attributo corretto per vedere le chiavi
-
-                # Cerchiamo la chiave delle feature
-                if 'features' in keys:
-                    features = data['features']
-                elif 'arr_0' in keys:
-                    features = data['arr_0']
-                else:
-                    # Fallback: prendiamo la prima chiave che ha senso (non vuota)
-                    features = data[keys[0]]
-
-                # Assicuriamoci che sia float32
-                features = features.astype(np.float32)
-
-        except Exception as e:
-            print(f"❌ Errore leggendo {filename}: {e}")
-            continue
-
-        # 3. Gestione Dimensioni (CRUCIALE: Ancoraggio a 1024)
-
-        # Caso A: Feature Spaziali (T, H, W, C) o simili -> Flatten spaziale
-        if features.ndim > 2:
-            # Media su tutte le dimensioni tranne la prima (Tempo) e l'ultima (Canali)
-            # o semplice media spaziale se shape è (T, H, W, C)
-            # Qui assumiamo che l'ultima dimensione sia 1024.
-            # Se è (1, 1024, T) è un caso raro, ma gestiamo il caso standard (T, C, H, W) -> mean
-            features = features.mean(axis=tuple(range(1, features.ndim - 1)))
-
-            # Caso B: Shape 2D (T, C) o (C, T)
-        if features.ndim == 2:
-            rows, cols = features.shape
-
-            if cols == KNOWN_FEATURE_DIM:
-                # Shape è (T, 1024) -> OK, non toccare
-                pass
-            elif rows == KNOWN_FEATURE_DIM:
-                # Shape è (1024, T) -> Trasponi
-                features = features.T
+            if feat_path:
+                current_feats = load_features_from_npz(feat_path)
             else:
-                # Se nessuna dimensione è 1024, c'è un problema nel file o nel modello
-                print(f"⚠️ Shape anomala per {filename}: {features.shape}. Atteso dim {KNOWN_FEATURE_DIM}.")
-                # (Opzionale) Possiamo provare a indovinare che la dim più grande è il tempo
-                if rows < cols:
-                    features = features.T
+                current_feats = None
 
-        # Controllo finale post-processing
-        if features.shape[1] != KNOWN_FEATURE_DIM:
-            print(f"❌ Errore critico dimensione feature per {video_id}: {features.shape}. Salto.")
-            continue
+        if current_feats is None: continue
 
-        processed_files += 1
+        # Estrazione temporale
+        start_frame = int(row['start'] * args.fps)
+        end_frame = int(row['end'] * args.fps)
+        s_idx = max(0, start_frame // args.feat_stride)
+        e_idx = max(0, end_frame // args.feat_stride)
 
-        # 4. Estrazione segmenti (Loop sugli step)
-        video_preds = df[df['video-id'] == video_id]
-        embeddings_list = []
+        n_feats = current_feats.shape[0]
+        s_idx = min(s_idx, n_feats - 1)
+        e_idx = min(e_idx, n_feats)
 
-        max_time_steps = features.shape[0]
+        grid = current_feats[s_idx:e_idx]
+        if grid.shape[0] == 0: grid = current_feats[s_idx:s_idx + 1]
 
-        for index, row in video_preds.iterrows():
-            t_start = row['t-start']
-            t_end = row['t-end']
+        step_emb = np.mean(grid, axis=0)
 
-            # Conversione secondi -> indici
-            # Nota: feat_stride=30 con fps=30 significa 1 feature al secondo.
-            # Formula: (secondi * fps) / stride
-            start_idx = int(np.floor((t_start * fps) / feat_stride))
-            end_idx = int(np.ceil((t_end * fps) / feat_stride))
+        entry = {
+            'video_id': video_id,
+            'start': row['start'],
+            'end': row['end'],
+            'label': row['label'],
+            'embedding': step_emb
+        }
+        # Aggiungiamo info extra utili per il task verification
+        if 'has_errors' in row:
+            entry['has_errors'] = row['has_errors']
 
-            # Clamp degli indici (non andare sotto 0 o oltre la fine del file)
-            start_idx = max(0, start_idx)
-            end_idx = min(max_time_steps, end_idx)
+        if video_id not in all_step_embeddings: all_step_embeddings[video_id] = []
+        all_step_embeddings[video_id].append(entry)
 
-            # Se il segmento è non valido (start >= end), proviamo a prendere almeno 1 frame
-            if start_idx >= end_idx:
-                if start_idx < max_time_steps:
-                    end_idx = start_idx + 1
-                else:
-                    # Il timestamp del CSV va oltre la durata del video estratto
-                    continue
-
-            # Slice
-            step_feats = features[start_idx:end_idx, :]
-
-            # Average Pooling temporale per ottenere un solo vettore per lo step
-            if step_feats.shape[0] > 0:
-                step_embedding = np.mean(step_feats, axis=0)
-
-                embeddings_list.append({
-                    'row_id': index,
-                    'video_id': video_id,
-                    'label': row['label'],
-                    'score': row['score'],
-                    'embedding': step_embedding
-                })
-
-        all_step_embeddings[video_id] = embeddings_list
-
-    # 5. Salvataggio
-    print(f"\nFinito! Processati {processed_files} video. {missing_files} mancanti.")
-
-    # Crea cartella output se non esiste
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-
-    # Salviamo
-    np.save(output_path, all_step_embeddings)
-    print(f"Output salvato in: {output_path}")
-
-
-# --- CONFIGURAZIONE ---
-# Uso r'' per stringhe raw (gestisce meglio i backslash di Windows)
-PREDS_FILE = r'libs/utils/model_outputs/preds.csv'
-FEAT_FOLDER = r'..\data\video\omnivore'
-OUTPUT_FILE = r'data/step_embeddings.npy'
-
-FPS = 30
-STRIDE = 30
-
-if __name__ == "__main__":
-    if os.path.exists(FEAT_FOLDER):
-        compute_step_embeddings(PREDS_FILE, FEAT_FOLDER, OUTPUT_FILE, fps=FPS, feat_stride=STRIDE)
+    # 4. Output
+    print(f"\nSalvataggio {len(all_step_embeddings)} video in {args.output}")
+    if len(all_step_embeddings) > 0:
+        np.save(args.output, all_step_embeddings)
     else:
-        print(f"Attenzione: Cartella '{FEAT_FOLDER}' non trovata.")
+        print("Nessun video salvato. Controlla il path delle features.")
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--preds_csv', required=True)
+    parser.add_argument('--feat_folder', required=True)
+    parser.add_argument('--output', required=True)
+    parser.add_argument('--fps', type=int, default=30)
+    parser.add_argument('--feat_stride', type=int, default=30)
+    parser.add_argument('--threshold', type=float, default=0.1)
+    args = parser.parse_args()
+    main(args)
+
+#esempio run python extension_localization/step_embeddings.py --preds_csv annotations/annotation_csv/step_annotations.csv --feat_folder data/video/omnivore --output data/step_embeddings_generated.npy --threshold 0.15
