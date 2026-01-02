@@ -78,7 +78,7 @@ def verify_output(npy_path, csv_path):
 
 # --- ESEGUI ---
 VERIFY_FILE = 'step_embeddings.npy'  # Il file che hai appena creato
-ORIGINAL_CSV = '../libs/utils/model_outputs/preds.csv'  # Il tuo CSV originale
+ORIGINAL_CSV = '../libs/utils/model_outputs/gt.csv'  # Il tuo CSV originale
 
 if __name__ == "__main__":
     verify_output(VERIFY_FILE, ORIGINAL_CSV)

@@ -1,8 +1,8 @@
 # python imports
 import argparse
+import datetime
 import os
 import time
-import datetime
 from pprint import pprint
 
 # torch imports
@@ -16,8 +16,7 @@ from torch.utils.tensorboard import SummaryWriter
 from libs.core import load_config
 from libs.datasets import make_dataset, make_data_loader
 from libs.modeling import make_meta_arch
-from libs.utils import (train_one_epoch, valid_one_epoch, ANETdetection,
-                        save_checkpoint, make_optimizer, make_scheduler,
+from libs.utils import (train_one_epoch, save_checkpoint, make_optimizer, make_scheduler,
                         fix_random_seed, ModelEma)
 
 
@@ -90,7 +89,7 @@ def main(args):
         if os.path.isfile(args.resume):
             # load ckpt, reset epoch / best rmse
             checkpoint = torch.load(args.resume,
-                map_location = cfg['devices'][0])
+                                    map_location=cfg['devices'][0])
             args.start_epoch = checkpoint['epoch']
             model.load_state_dict(checkpoint['state_dict'])
             model_ema.module.load_state_dict(checkpoint['state_dict_ema'])
@@ -126,16 +125,16 @@ def main(args):
             optimizer,
             scheduler,
             epoch,
-            model_ema = model_ema,
-            clip_grad_l2norm = cfg['train_cfg']['clip_grad_l2norm'],
+            model_ema=model_ema,
+            clip_grad_l2norm=cfg['train_cfg']['clip_grad_l2norm'],
             tb_writer=tb_writer,
             print_freq=args.print_freq
         )
 
         # save ckpt once in a while
         if (
-            ((epoch + 1) == max_epochs) or
-            ((args.ckpt_freq > 0) and ((epoch + 1) % args.ckpt_freq == 0))
+                ((epoch + 1) == max_epochs) or
+                ((args.ckpt_freq > 0) and ((epoch + 1) % args.ckpt_freq == 0))
         ):
             save_states = {
                 'epoch': epoch + 1,
@@ -157,12 +156,13 @@ def main(args):
     print("All done!")
     return
 
+
 ################################################################################
 if __name__ == '__main__':
     """Entry Point"""
     # the arg parser
     parser = argparse.ArgumentParser(
-      description='Train a point-based transformer for action localization')
+        description='Train a point-based transformer for action localization')
     parser.add_argument('config', metavar='DIR',
                         help='path to a config file')
     parser.add_argument('-p', '--print-freq', default=10, type=int,
