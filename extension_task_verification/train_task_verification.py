@@ -7,7 +7,7 @@ BATCH_SIZE = 8
 EPOCHS = 15
 LEARNING_RATE = 1e-4
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
-# python extension_task_verification/train_task_verification.py --npy extension_localization/data/step_embeddings_generated_new.npy --annotations extension_localization/data/step_annotations.json --ckpt_dir extension_task_verification/checkpoints --epochs 15
+# python extension_task_verification/train_task_verification.py --npy extension_localization/data/step_embeddings.npy --annotations extension_localization/data/step_annotations.json --ckpt_dir extension_task_verification/checkpoints --epochs 15
 import argparse
 import json
 import os
