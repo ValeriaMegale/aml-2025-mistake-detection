@@ -18,13 +18,19 @@ def load_annotations(json_path):
 
 
 def get_binary_label(video_id, steps, annotation_map):
-    is_error = False
-    for step in steps:
-        lbl = str(step['label'])
-        if lbl in annotation_map and annotation_map[lbl].get('has_errors', False):
-            is_error = True;
-            break
-    return 1.0 if is_error else 0.0
+    # Corretto: controlla se il video_id ha errori in annotation_map
+    if video_id not in annotation_map:
+        return 0.0
+    video_data = annotation_map[video_id]
+    # Se il video ha il flag 'has_errors' a True
+    if video_data.get('has_errors', False):
+        return 1.0
+    # Altrimenti controlla se almeno uno step ha errori
+    if 'steps' in video_data:
+        for step in video_data['steps']:
+            if step.get('has_errors', False):
+                return 1.0
+    return 0.0
 
 
 class RecipeTaskDataset(Dataset):
