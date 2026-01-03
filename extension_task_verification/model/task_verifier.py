@@ -3,7 +3,8 @@ import torch.nn as nn
 
 
 class TaskVerifier(nn.Module):
-    def __init__(self, input_dim=1024, hidden_dim=256, n_heads=4, n_layers=2):
+    # input_dim=1024 per Omnivore, input_dim=768 per Perception
+    def __init__(self, input_dim=768, hidden_dim=256, n_heads=4, n_layers=2):
         super().__init__()
         self.input_proj = nn.Linear(input_dim, hidden_dim)
         self.pos_embedding = nn.Parameter(torch.randn(1, 1000, hidden_dim))
