@@ -50,15 +50,17 @@ def build_file_map(feat_folder):
 
 
 def main(args):
-    # 1. Indicizzazione
-    feat_map = build_file_map(args.feat_folder)
-    if not feat_map: return
+    # --- VERSIONE OMNIVORE ---
+    # feat_map = build_file_map('data/video/omnivore')
+    # print("[OMNIVORE] Lettura CSV:", args.preds_csv)
+    # df = pd.read_csv(args.preds_csv)
+    # ...existing code...
+    # np.save(args.output, all_step_embeddings)
 
-    # 2. Lettura CSV e Adattamento Colonne
-    print(f"Lettura CSV: {args.preds_csv}")
+    # --- VERSIONE PERCEPTION ---
+    feat_map = build_file_map('data/video/perception')
+    print("[PERCEPTION] Lettura CSV:", args.preds_csv)
     df = pd.read_csv(args.preds_csv)
-
-    # Mappatura colonne per step_annotations.csv vs preds.csv
     col_map = {
         'recording_id': 'video_id',
         'video-id': 'video_id',
@@ -66,13 +68,11 @@ def main(args):
         't-start': 'start',
         'end_time': 'end',
         't-end': 'end',
-        'step_id': 'label',  # Usa step_id come label numerica
+        'step_id': 'label',
         'label': 'label'
     }
     df.rename(columns=col_map, inplace=True)
     df.columns = df.columns.str.strip()
-
-    # Verifica colonne essenziali
     required = ['video_id', 'start', 'end']
     if not all(col in df.columns for col in required):
         print(f"ERRORE: Colonne mancanti. Trovate: {df.columns}. Servono: {required}")

@@ -1,13 +1,21 @@
 import torch
 
 # --- CONFIGURAZIONE ---
-NPY_PATH = '../extension_localization/data/step_embeddings_generated.npy'  # Output del substep 1
+"""
+# --- CONFIGURAZIONE OMNIVORE ---
+# NPY_PATH = '../extension_localization/data/step_embeddings.npy'  # Omnivore 1024-dim
+# --- CONFIGURAZIONE PERCEPTION ---
+# NPY_PATH = '../extension_localization/data/step_embeddings_perception.npy'  # Perception 768-dim
 ANNOTATIONS_PATH = '../extension_localization/data/step_annotations.json'
 BATCH_SIZE = 8
 EPOCHS = 15
 LEARNING_RATE = 1e-4
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+# Esempio run OMNIVORE:
 # python extension_task_verification/train_task_verification.py --npy extension_localization/data/step_embeddings.npy --annotations extension_localization/data/step_annotations.json --ckpt_dir extension_task_verification/checkpoints --epochs 15
+# Esempio run PERCEPTION:
+# python extension_task_verification/train_task_verification.py --npy extension_localization/data/step_embeddings_perception.npy --annotations extension_localization/data/step_annotations.json --ckpt_dir extension_task_verification/checkpoints --epochs 15
+"""
 import argparse
 import json
 import os
