@@ -1,0 +1,98 @@
+{
+  "1": {
+    "name": "Microwave Egg Sandwich",
+    "task_graph_file": "microwaveeggsandwich.json"
+  },
+  "2": {
+    "name": "Dressed Up Meatballs",
+    "task_graph_file": "dressedupmeatballs.json"
+  },
+  "3": {
+    "name": "Microwave Mug Pizza",
+    "task_graph_file": "microwavemugpizza.json"
+  },
+  "4": {
+    "name": "Ramen",
+    "task_graph_file": "ramen.json"
+  },
+  "5": {
+    "name": "Coffee",
+    "task_graph_file": "coffee.json"
+  },
+  "7": {
+    "name": "Breakfast Burritos",
+    "task_graph_file": "breakfastburritos.json"
+  },
+  "8": {
+    "name": "Spiced Hot Chocolate",
+    "task_graph_file": "spicedhotchocolate.json"
+  },
+  "9": {
+    "name": "Microwave French Toast",
+    "task_graph_file": "microwavefrenchtoast.json"
+  },
+  "10": {
+    "name": "Pinwheels",
+    "task_graph_file": "pinwheels.json"
+  },
+  "12": {
+    "name": "Tomato Mozzarella Salad",
+    "task_graph_file": "tomatomozzarellasalad.json"
+  },
+  "13": {
+    "name": "Butter Corn Cup",
+    "task_graph_file": "buttercorncup.json"
+  },
+  "15": {
+    "name": "Tomato Chutney",
+    "task_graph_file": "tomatochutney.json"
+  },
+  "16": {
+    "name": "Scrambled Eggs",
+    "task_graph_file": "scrambledeggs.json"
+  },
+  "17": {
+    "name": "Cucumber Raita",
+    "task_graph_file": "cucumberraita.json"
+  },
+  "18": {
+    "name": "Zoodles",
+    "task_graph_file": "zoodles.json"
+  },
+  "20": {
+    "name": "Sauted Mushrooms",
+    "task_graph_file": "sautedmushrooms.json"
+  },
+  "21": {
+    "name": "Blender Banana Pancakes",
+    "task_graph_file": "blenderbananapancakes.json"
+  },
+  "22": {
+    "name": "Herb Omelet with Fried Tomatoes",
+    "task_graph_file": "herbomeletwithfriedtomatoes.json"
+  },
+  "23": {
+    "name": "Broccoli Stir Fry",
+    "task_graph_file": "broccolistirfry.json"
+  },
+  "25": {
+    "name": "Pan Fried Tofu",
+    "task_graph_file": "panfriedtofu.json"
+  },
+  "26": {
+    "name": "Mug Cake",
+    "task_graph_file": "mugcake.json"
+  },
+  "27": {
+    "name": "Cheese Pimiento",
+    "task_graph_file": "cheesepimiento.json"
+  },
+  "28": {
+    "name": "Spicy Tuna Avocado Wraps",
+    "task_graph_file": "spicytunaavocadowraps.json"
+  },
+  "29": {
+    "name": "Caprese Bruschetta",
+    "task_graph_file": "capresebruschetta.json"
+  }
+}
