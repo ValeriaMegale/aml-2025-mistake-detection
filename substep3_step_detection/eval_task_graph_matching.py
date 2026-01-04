@@ -238,8 +238,8 @@ if __name__ == "__main__":
                         default='annotations/task_graphs',
                         help='Directory containing task graph JSON files')
     parser.add_argument('--text_model', type=str,
-                        default='all-MiniLM-L6-v2',
-                        help='Sentence transformer model name')
+                        default='clip',
+                        help='Text encoder: "clip" (512-dim, aligned with perception) or "all-MiniLM-L6-v2" (384-dim)')
     
     parser.add_argument('--test_recipe', type=str, default=None,
                         help='Recipe ID to test on (leave-one-out style)')
