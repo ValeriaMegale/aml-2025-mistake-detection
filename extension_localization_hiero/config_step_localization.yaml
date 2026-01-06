@@ -1,0 +1,26 @@
+# Configuration for Step Localization using Hierarchical Clustering
+
+# Feature paths
+feat_folder: data/video/perception
+feat_stride: 1.0  # seconds per feature (1s_1s.npz means 1 second per feature)
+fps: 30.0  # default fps (can be read from metadata if available)
+
+# Clustering parameters
+clustering_method: hierarchical  # hierarchical | kmeans | change_point
+clustering_distance: cosine  # cosine | euclidean
+linkage_method: ward  # ward | complete | average | single
+
+# Postprocessing parameters
+min_segment_duration: 2.0  # minimum segment duration in seconds
+max_segments_per_video: 75  # maximum number of segments per video
+nms_threshold: 0.3  # IoU threshold for temporal NMS
+
+# Embedding parameters
+pooling_method: mean  # mean | max
+
+# Output paths
+output_segments: extension_localization_hiero/data/step_segments_perception.json
+output_embeddings: extension_localization_hiero/data/step_embeddings_perception.npy
+
+# Data split (for processing specific splits)
+split: all  # all | train | val | test
