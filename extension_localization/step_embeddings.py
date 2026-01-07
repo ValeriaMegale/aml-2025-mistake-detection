@@ -155,4 +155,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
     main(args)
 
-#esempio run python extension_localization/step_embeddings.py --preds_csv extension_localization/data/libs/model_outputs/preds.csv --feat_folder data/video/omnivore --output extension_localization/data/step_embeddings.npy --threshold 0.15
+#esempio run python extension_localization/step_embeddings.py --preds_csv extension_localization/data/libs/model_outputs/preds.csv --feat_folder data/video/perception --output extension_localization/data/step_embeddings_perc.npy --threshold 0.15

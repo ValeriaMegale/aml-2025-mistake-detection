@@ -190,7 +190,7 @@ def train_epoch(model, dataloader, optimizer, criterion, device, scaler, accumul
         labels = batch['labels'].to(device)
         
         # Mixed precision forward
-        with autocast():
+        with torch.amp.autocast('cuda'):
             probs, matching_costs = model(visual, text, visual_mask, text_mask)
             loss = criterion(probs, labels) / accumulation_steps
         
@@ -210,14 +210,14 @@ def train_epoch(model, dataloader, optimizer, criterion, device, scaler, accumul
 
 
 def evaluate(model, dataloader, criterion, device):
-    """Evaluation con metriche complete"""
+    """Evaluation con metriche complete e supporto per Logits (BCEWithLogitsLoss)"""
     model.eval()
     total_loss = 0
     n_batches = 0
     all_preds = []
     all_labels = []
     all_costs = []
-    
+
     with torch.no_grad():
         for batch in dataloader:
             visual = batch['visual_emb'].to(device)
@@ -225,30 +225,35 @@ def evaluate(model, dataloader, criterion, device):
             visual_mask = batch['visual_mask'].to(device)
             text_mask = batch['text_mask'].to(device)
             labels = batch['labels'].to(device)
-            
-            with autocast():
-                probs, matching_costs = model(visual, text, visual_mask, text_mask)
-                loss = criterion(probs, labels)
-            
+
+            # Utilizzo della nuova sintassi torch.amp.autocast
+            with torch.amp.autocast('cuda' if device == 'cuda' else 'cpu'):
+                logits, matching_costs = model(visual, text, visual_mask, text_mask)
+                loss = criterion(logits, labels)
+
+            # Applichiamo Sigmoid per trasformare i Logits in probabilità (0-1)
+            probs = torch.sigmoid(logits)
+
             total_loss += loss.item()
             n_batches += 1
-            
+
             all_preds.extend(probs.cpu().numpy().flatten().tolist())
             all_labels.extend(labels.cpu().numpy().flatten().tolist())
             all_costs.extend(matching_costs.cpu().numpy().tolist())
-    
+
+    # Calcolo metriche basato sulla soglia 0.5
     preds_binary = [1 if p > 0.5 else 0 for p in all_preds]
-    
+
     tp = sum(1 for p, l in zip(preds_binary, all_labels) if p == 1 and l == 1)
     fp = sum(1 for p, l in zip(preds_binary, all_labels) if p == 1 and l == 0)
     tn = sum(1 for p, l in zip(preds_binary, all_labels) if p == 0 and l == 0)
     fn = sum(1 for p, l in zip(preds_binary, all_labels) if p == 0 and l == 1)
-    
+
     accuracy = (tp + tn) / max(tp + tn + fp + fn, 1)
     precision = tp / max(tp + fp, 1)
     recall = tp / max(tp + fn, 1)
     f1 = 2 * precision * recall / max(precision + recall, 1e-6)
-    
+
     return {
         'loss': total_loss / max(n_batches, 1),
         'accuracy': accuracy,
@@ -257,7 +262,6 @@ def evaluate(model, dataloader, criterion, device):
         'f1': f1,
         'avg_matching_cost': np.mean(all_costs)
     }
-
 
 # ==================== MAIN ====================
 
@@ -360,7 +364,7 @@ def main(args):
         
         optimizer = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
         scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
-        criterion = nn.BCELoss()
+        criterion = nn.BCEWithLogitsLoss()
         
         # Training loop with early stopping
         best_f1 = 0
