@@ -129,5 +129,7 @@ if __name__ == "__main__":
 
     run_evaluation(args)
 
-#esempio run
-#python extension_task_verification/eval_task_verification.py --npy extension_localization/data/step_embeddings.npy --annotations extension_localization/data/step_annotations.json --ckpt_dir extension_task_verification/checkpoints
+# Esempio run OMNIVORE:
+# python extension_task_verification/eval_task_verification.py --npy extension_localization/data/step_embeddings.npy --annotations extension_localization/data/step_annotations.json --ckpt_dir extension_task_verification/checkpoints
+# Esempio run PERCEPTION:
+# python extension_task_verification/eval_task_verification.py --npy extension_localization/data/step_embeddings_perception.npy --annotations extension_localization/data/step_annotations.json --ckpt_dir extension_task_verification/checkpoints
