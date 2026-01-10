@@ -434,7 +434,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train Task Graph Matching model")
     
     parser.add_argument('--npy', type=str, 
-                        default='extension_localization/data/step_embeddings_perception.npy',
+                        default='extension_localization_hiero/data/step_embeddings_perception.npy',
                         help='Path to step embeddings .npy file (perception features 768-dim)')
     parser.add_argument('--annotations', type=str,
                         default='extension_localization/data/step_annotations.json',

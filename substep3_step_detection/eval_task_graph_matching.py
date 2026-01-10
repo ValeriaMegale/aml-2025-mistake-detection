@@ -187,7 +187,7 @@ def main(args):
     print(f"\nLoading model from {args.checkpoint}...")
     
     model = TaskGraphMatcher(
-        visual_dim=1024,
+        visual_dim=768,
         text_dim=text_encoder.dim,
         hidden_dim=args.hidden_dim
     ).to(device)

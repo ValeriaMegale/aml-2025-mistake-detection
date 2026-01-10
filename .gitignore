@@ -171,3 +171,6 @@ results
 .vscode
 
 ckpt/
+
+checkpoints_graph/
+checkpoints_graph_test/

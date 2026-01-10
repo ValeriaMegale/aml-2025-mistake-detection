@@ -8,7 +8,7 @@ This substep implements **Task Graph Matching** for the "From Mistake Detection 
 2. **Matches visual steps to task graph nodes** using the Hungarian algorithm
 3. **Uses matching quality** as a signal for error detection
 
-**Key Requirement**: Uses **Perception/EgoVLP features** (768-dim) with **CLIP text encoder** (512-dim) because they share an aligned video-text embedding space, enabling meaningful visual-to-text matching.
+**Key Requirement**: Uses **Perception features** (768-dim) with **CLIP text encoder** (512-dim) because they share an aligned video-text embedding space, enabling meaningful visual-to-text matching.
 
 ## Architecture
 
