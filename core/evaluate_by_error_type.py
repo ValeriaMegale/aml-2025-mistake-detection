@@ -9,13 +9,13 @@ import argparse
 import json
 import os
 from typing import Optional
-
+import sys
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score, accuracy_score
 from tqdm import tqdm
-
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from base import fetch_model
 from constants import Constants as const
 from dataloader.CaptainCookStepDataset import CaptainCookStepDataset
@@ -251,7 +251,7 @@ def save_results(results, config, output_dir="results/error_type_analysis"):
     
     results_file = os.path.join(
         output_dir, 
-        f"{config.variant}_{config.backbone}_{config.split}_error_analysis.json"
+        f"{config.variant}_{config.backbone}_{config.split}_error_analysis_Trans-omnivore-5e-4_epoch_33.json"
     )
     
     # Converti per JSON serialization
@@ -307,7 +307,7 @@ if __name__ == "__main__":
                         choices=[const.STEP_SPLIT, const.RECORDINGS_SPLIT, const.PERSON_SPLIT, const.ENVIRONMENT_SPLIT], 
                         required=True)
     parser.add_argument("--backbone", type=str, 
-                        choices=[const.SLOWFAST, const.OMNIVORE], 
+                        choices=[const.SLOWFAST, const.OMNIVORE, const.PERCEPTION],
                         required=True)
     parser.add_argument("--variant", type=str, 
                         choices=[const.MLP_VARIANT, const.TRANSFORMER_VARIANT, const.RNN_VARIANT], 
@@ -325,5 +325,5 @@ if __name__ == "__main__":
     conf.variant = args.variant
     conf.ckpt = args.ckpt
     conf.device = args.device
-    
+#python core/evaluate_by_error_type.py --split step --backbone omnivore --variant Transformer --ckpt checkpoints/error_recognition_best/Transformer/omnivore/Trans-omnivore-5e-4_epoch_33.pt
     eval_er_by_error_type(conf, args.threshold)
