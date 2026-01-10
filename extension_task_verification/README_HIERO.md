@@ -67,3 +67,5 @@ Il modello `TaskVerifier`:
 - Il modello usa **recipe-level binary labels**: 1 se il video ha errori, 0 altrimenti
 - **Leave-One-Out**: Per ogni ricetta, addestra su tutte le altre (k-1) e testa sulla ricetta hold-out
 - Gli embeddings vengono automaticamente convertiti dal formato HiERO al formato atteso
+
+

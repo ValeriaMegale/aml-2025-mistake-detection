@@ -279,8 +279,23 @@ def main(args):
     
     # Load data
     print("Loading data...")
-    step_embeddings = np.load(args.npy, allow_pickle=True).item()
+    step_embeddings_raw = np.load(args.npy, allow_pickle=True).item()
     annotation_map = load_step_annotations(args.annotations)
+    
+    # Convert HiERO format to expected format if needed
+    # HiERO format: {video_id: numpy_array [N, 768]}
+    # Expected format: {video_id: [{'embedding': array}, ...]}
+    step_embeddings = {}
+    for video_id, embeddings_array in step_embeddings_raw.items():
+        if isinstance(embeddings_array, np.ndarray):
+            # Convert numpy array to list of dicts
+            step_embeddings[video_id] = [
+                {'embedding': embeddings_array[i]} 
+                for i in range(embeddings_array.shape[0])
+            ]
+        else:
+            # Already in expected format
+            step_embeddings[video_id] = embeddings_array
     recording_to_activity = load_recording_to_activity_mapping(args.recording_csv)
     activity_to_taskgraph = load_activity_to_taskgraph(args.activity_mapping)
     

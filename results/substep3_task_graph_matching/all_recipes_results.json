@@ -1,0 +1,1588 @@
+{
+  "aggregate": {
+    "num_recipes_evaluated": 10,
+    "total_recipes": 24,
+    "missing_recipes": [
+      "3",
+      "4",
+      "5",
+      "7",
+      "8",
+      "9",
+      "21",
+      "22",
+      "23",
+      "25",
+      "26",
+      "27",
+      "28",
+      "29"
+    ],
+    "accuracy": {
+      "mean": 0.5395238095238095,
+      "std": 0.1472054497783436,
+      "min": 0.3333333333333333,
+      "max": 0.7333333333333333
+    },
+    "precision": {
+      "mean": 0.6163095238095238,
+      "std": 0.274854140868997,
+      "min": 0.0,
+      "max": 1.0
+    },
+    "recall": {
+      "mean": 0.631978021978022,
+      "std": 0.45192511773479543,
+      "min": 0.0,
+      "max": 1.0
+    },
+    "f1": {
+      "mean": 0.5073609723609724,
+      "std": 0.31299886869832083,
+      "min": 0.0,
+      "max": 0.8461538461538461
+    },
+    "auc": {
+      "mean": 0.5565411671661672,
+      "std": 0.10877208116455368,
+      "min": 0.33333333333333326,
+      "max": 0.7272727272727273
+    }
+  },
+  "per_recipe": [
+    {
+      "recipe_id": "1",
+      "checkpoint": "substep3_step_detection/checkpoints_graph_test/task_graph_matcher_recipe_1.pth",
+      "epoch": 1,
+      "num_test_videos": 18,
+      "metrics": {
+        "accuracy": 0.3333333333333333,
+        "precision": 1.0,
+        "recall": 0.07692307692307693,
+        "f1": 0.14285714285714285,
+        "avg_matching_cost": 0.14289928751963155,
+        "threshold": 0.5,
+        "auc": 0.6153846153846154,
+        "confusion_matrix": [
+          [
+            5,
+            0
+          ],
+          [
+            12,
+            1
+          ]
+        ]
+      },
+      "predictions": [
+        {
+          "video_id": "1_7",
+          "probability": 0.4921785295009613,
+          "prediction": 0,
+          "ground_truth": 0,
+          "matching_cost": 0.13204747438430786,
+          "correct": true
+        },
+        {
+          "video_id": "1_20",
+          "probability": 0.49176281690597534,
+          "prediction": 0,
+          "ground_truth": 0,
+          "matching_cost": 0.1486230492591858,
+          "correct": true
+        },
+        {
+          "video_id": "1_36",
+          "probability": 0.49430355429649353,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.1471042533715566,
+          "correct": false
+        },
+        {
+          "video_id": "1_34",
+          "probability": 0.5048982501029968,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.14012117187182108,
+          "correct": true
+        },
+        {
+          "video_id": "1_37",
+          "probability": 0.4936438202857971,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.13767370581626892,
+          "correct": false
+        },
+        {
+          "video_id": "1_10",
+          "probability": 0.4954301714897156,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.1431726614634196,
+          "correct": false
+        },
+        {
+          "video_id": "1_28",
+          "probability": 0.4929617643356323,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.15189269185066223,
+          "correct": false
+        },
+        {
+          "video_id": "1_32",
+          "probability": 0.4941684901714325,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.1413064698378245,
+          "correct": false
+        },
+        {
+          "video_id": "1_33",
+          "probability": 0.49299755692481995,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.13902324438095093,
+          "correct": false
+        },
+        {
+          "video_id": "1_49",
+          "probability": 0.48926904797554016,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.13285964727401733,
+          "correct": false
+        },
+        {
+          "video_id": "1_143",
+          "probability": 0.4885459840297699,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.1415950357913971,
+          "correct": false
+        },
+        {
+          "video_id": "1_14",
+          "probability": 0.49029579758644104,
+          "prediction": 0,
+          "ground_truth": 0,
+          "matching_cost": 0.13810020685195923,
+          "correct": true
+        },
+        {
+          "video_id": "1_136",
+          "probability": 0.4915773272514343,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.1480283041795095,
+          "correct": false
+        },
+        {
+          "video_id": "1_43",
+          "probability": 0.49072009325027466,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.1376629869143168,
+          "correct": false
+        },
+        {
+          "video_id": "1_25",
+          "probability": 0.4912976622581482,
+          "prediction": 0,
+          "ground_truth": 0,
+          "matching_cost": 0.144200990597407,
+          "correct": true
+        },
+        {
+          "video_id": "1_19",
+          "probability": 0.49104177951812744,
+          "prediction": 0,
+          "ground_truth": 0,
+          "matching_cost": 0.15411806106567383,
+          "correct": true
+        },
+        {
+          "video_id": "1_42",
+          "probability": 0.4907650053501129,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.145088920990626,
+          "correct": false
+        },
+        {
+          "video_id": "1_30",
+          "probability": 0.48926272988319397,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.14956829945246378,
+          "correct": false
+        }
+      ]
+    },
+    {
+      "recipe_id": "2",
+      "checkpoint": "substep3_step_detection/checkpoints_graph_test/task_graph_matcher_recipe_2.pth",
+      "epoch": 1,
+      "num_test_videos": 16,
+      "metrics": {
+        "accuracy": 0.375,
+        "precision": 0.5,
+        "recall": 0.1,
+        "f1": 0.16666666666666666,
+        "avg_matching_cost": 0.11326964944601059,
+        "threshold": 0.5,
+        "auc": 0.43333333333333335,
+        "confusion_matrix": [
+          [
+            5,
+            1
+          ],
+          [
+            9,
+            1
+          ]
+        ]
+      },
+      "predictions": [
+        {
+          "video_id": "2_46",
+          "probability": 0.4828818440437317,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.12891872227191925,
+          "correct": false
+        },
+        {
+          "video_id": "2_13",
+          "probability": 0.5015103220939636,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.11095947027206421,
+          "correct": false
+        },
+        {
+          "video_id": "2_47",
+          "probability": 0.48852798342704773,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.10938682407140732,
+          "correct": false
+        },
+        {
+          "video_id": "2_22",
+          "probability": 0.48473060131073,
+          "prediction": 0,
+          "ground_truth": 0,
+          "matching_cost": 0.11635923385620117,
+          "correct": true
+        },
+        {
+          "video_id": "2_5",
+          "probability": 0.4934485852718353,
+          "prediction": 0,
+          "ground_truth": 0,
+          "matching_cost": 0.10431995987892151,
+          "correct": true
+        },
+        {
+          "video_id": "2_38",
+          "probability": 0.49890318512916565,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.11202821880578995,
+          "correct": false
+        },
+        {
+          "video_id": "2_28",
+          "probability": 0.4897230863571167,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.11005741357803345,
+          "correct": false
+        },
+        {
+          "video_id": "2_4",
+          "probability": 0.4880043864250183,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.11910738050937653,
+          "correct": false
+        },
+        {
+          "video_id": "2_19",
+          "probability": 0.4908512830734253,
+          "prediction": 0,
+          "ground_truth": 0,
+          "matching_cost": 0.10804584622383118,
+          "correct": true
+        },
+        {
+          "video_id": "2_42",
+          "probability": 0.490220844745636,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.11619338393211365,
+          "correct": false
+        },
+        {
+          "video_id": "2_30",
+          "probability": 0.49630919098854065,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.11831135302782059,
+          "correct": false
+        },
+        {
+          "video_id": "2_41",
+          "probability": 0.498182475566864,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.11313270032405853,
+          "correct": false
+        },
+        {
+          "video_id": "2_8",
+          "probability": 0.49775174260139465,
+          "prediction": 0,
+          "ground_truth": 0,
+          "matching_cost": 0.1148100197315216,
+          "correct": true
+        },
+        {
+          "video_id": "2_17",
+          "probability": 0.49100980162620544,
+          "prediction": 0,
+          "ground_truth": 0,
+          "matching_cost": 0.11393358558416367,
+          "correct": true
+        },
+        {
+          "video_id": "2_26",
+          "probability": 0.500359296798706,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.1059587299823761,
+          "correct": true
+        },
+        {
+          "video_id": "2_3",
+          "probability": 0.4926082491874695,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.11079154908657074,
+          "correct": false
+        }
+      ]
+    },
+    {
+      "recipe_id": "10",
+      "checkpoint": "substep3_step_detection/checkpoints_graph_test/task_graph_matcher_recipe_10.pth",
+      "epoch": 1,
+      "num_test_videos": 12,
+      "metrics": {
+        "accuracy": 0.6666666666666666,
+        "precision": 0.6666666666666666,
+        "recall": 1.0,
+        "f1": 0.8,
+        "avg_matching_cost": 0.12337094963642588,
+        "threshold": 0.5,
+        "auc": 0.59375,
+        "confusion_matrix": [
+          [
+            0,
+            4
+          ],
+          [
+            0,
+            8
+          ]
+        ]
+      },
+      "predictions": [
+        {
+          "video_id": "10_46",
+          "probability": 0.5083827972412109,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.130280055497822,
+          "correct": true
+        },
+        {
+          "video_id": "10_47",
+          "probability": 0.5067564249038696,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.11967185923927709,
+          "correct": true
+        },
+        {
+          "video_id": "10_24",
+          "probability": 0.5080934166908264,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.12107086181640625,
+          "correct": false
+        },
+        {
+          "video_id": "10_16",
+          "probability": 0.5142654180526733,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.13062029135854622,
+          "correct": false
+        },
+        {
+          "video_id": "10_42",
+          "probability": 0.510573148727417,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.1250341816952354,
+          "correct": true
+        },
+        {
+          "video_id": "10_50",
+          "probability": 0.5229106545448303,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.11717978276704487,
+          "correct": true
+        },
+        {
+          "video_id": "10_26",
+          "probability": 0.5134415626525879,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.12170721355237459,
+          "correct": true
+        },
+        {
+          "video_id": "10_18",
+          "probability": 0.512319803237915,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.12310227594877544,
+          "correct": false
+        },
+        {
+          "video_id": "10_31",
+          "probability": 0.5155672430992126,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.12467468412298906,
+          "correct": true
+        },
+        {
+          "video_id": "10_48",
+          "probability": 0.5135852098464966,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.11858283846001876,
+          "correct": true
+        },
+        {
+          "video_id": "10_6",
+          "probability": 0.5133799314498901,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.12551901215001157,
+          "correct": false
+        },
+        {
+          "video_id": "10_7",
+          "probability": 0.5136784315109253,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.12300833902860943,
+          "correct": true
+        }
+      ]
+    },
+    {
+      "recipe_id": "12",
+      "checkpoint": "substep3_step_detection/checkpoints_graph_test/task_graph_matcher_recipe_12.pth",
+      "epoch": 1,
+      "num_test_videos": 18,
+      "metrics": {
+        "accuracy": 0.6666666666666666,
+        "precision": 1.0,
+        "recall": 0.14285714285714285,
+        "f1": 0.25,
+        "avg_matching_cost": 0.08921138960638164,
+        "threshold": 0.5,
+        "auc": 0.6623376623376623,
+        "confusion_matrix": [
+          [
+            11,
+            0
+          ],
+          [
+            6,
+            1
+          ]
+        ]
+      },
+      "predictions": [
+        {
+          "video_id": "12_41",
+          "probability": 0.4799407422542572,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.08472385671403673,
+          "correct": false
+        },
+        {
+          "video_id": "12_119",
+          "probability": 0.4662778079509735,
+          "prediction": 0,
+          "ground_truth": 0,
+          "matching_cost": 0.0873753892050849,
+          "correct": true
+        },
+        {
+          "video_id": "12_16",
+          "probability": 0.4791264832019806,
+          "prediction": 0,
+          "ground_truth": 0,
+          "matching_cost": 0.10019638803270128,
+          "correct": true
+        },
+        {
+          "video_id": "12_6",
+          "probability": 0.47658348083496094,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.08617028925153944,
+          "correct": false
+        },
+        {
+          "video_id": "12_51",
+          "probability": 0.4892042279243469,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.0820185939470927,
+          "correct": false
+        },
+        {
+          "video_id": "12_17",
+          "probability": 0.4739210903644562,
+          "prediction": 0,
+          "ground_truth": 0,
+          "matching_cost": 0.10273187028037177,
+          "correct": true
+        },
+        {
+          "video_id": "12_9",
+          "probability": 0.48479121923446655,
+          "prediction": 0,
+          "ground_truth": 0,
+          "matching_cost": 0.09437624613444011,
+          "correct": true
+        },
+        {
+          "video_id": "12_13",
+          "probability": 0.4837896525859833,
+          "prediction": 0,
+          "ground_truth": 0,
+          "matching_cost": 0.09248192442788018,
+          "correct": true
+        },
+        {
+          "video_id": "12_26",
+          "probability": 0.48424068093299866,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.08035272359848022,
+          "correct": false
+        },
+        {
+          "video_id": "12_5",
+          "probability": 0.47048312425613403,
+          "prediction": 0,
+          "ground_truth": 0,
+          "matching_cost": 0.0882935192849901,
+          "correct": true
+        },
+        {
+          "video_id": "12_38",
+          "probability": 0.4790859520435333,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.0941836569044325,
+          "correct": false
+        },
+        {
+          "video_id": "12_43",
+          "probability": 0.5087087750434875,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.07513493961758083,
+          "correct": true
+        },
+        {
+          "video_id": "12_15",
+          "probability": 0.47048261761665344,
+          "prediction": 0,
+          "ground_truth": 0,
+          "matching_cost": 0.09301315413581,
+          "correct": true
+        },
+        {
+          "video_id": "12_10",
+          "probability": 0.49242717027664185,
+          "prediction": 0,
+          "ground_truth": 0,
+          "matching_cost": 0.08795628282758924,
+          "correct": true
+        },
+        {
+          "video_id": "12_12",
+          "probability": 0.48882952332496643,
+          "prediction": 0,
+          "ground_truth": 0,
+          "matching_cost": 0.08415012889438206,
+          "correct": true
+        },
+        {
+          "video_id": "12_48",
+          "probability": 0.48929068446159363,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.09231944216622247,
+          "correct": false
+        },
+        {
+          "video_id": "12_2",
+          "probability": 0.48104026913642883,
+          "prediction": 0,
+          "ground_truth": 0,
+          "matching_cost": 0.09044889609018962,
+          "correct": true
+        },
+        {
+          "video_id": "12_19",
+          "probability": 0.4861471951007843,
+          "prediction": 0,
+          "ground_truth": 0,
+          "matching_cost": 0.08987771140204535,
+          "correct": true
+        }
+      ]
+    },
+    {
+      "recipe_id": "13",
+      "checkpoint": "substep3_step_detection/checkpoints_graph_test/task_graph_matcher_recipe_13.pth",
+      "epoch": 1,
+      "num_test_videos": 14,
+      "metrics": {
+        "accuracy": 0.35714285714285715,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "avg_matching_cost": 0.06121000150839488,
+        "threshold": 0.5,
+        "auc": 0.33333333333333326,
+        "confusion_matrix": [
+          [
+            5,
+            0
+          ],
+          [
+            9,
+            0
+          ]
+        ]
+      },
+      "predictions": [
+        {
+          "video_id": "13_5",
+          "probability": 0.4991335868835449,
+          "prediction": 0,
+          "ground_truth": 0,
+          "matching_cost": 0.05318078895409902,
+          "correct": true
+        },
+        {
+          "video_id": "13_31",
+          "probability": 0.4890400767326355,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.06598767638206482,
+          "correct": false
+        },
+        {
+          "video_id": "13_41",
+          "probability": 0.48361775279045105,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.059147730469703674,
+          "correct": false
+        },
+        {
+          "video_id": "13_14",
+          "probability": 0.48600074648857117,
+          "prediction": 0,
+          "ground_truth": 0,
+          "matching_cost": 0.06978655358155568,
+          "correct": true
+        },
+        {
+          "video_id": "13_38",
+          "probability": 0.48438698053359985,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.057138865192731224,
+          "correct": false
+        },
+        {
+          "video_id": "13_18",
+          "probability": 0.49577540159225464,
+          "prediction": 0,
+          "ground_truth": 0,
+          "matching_cost": 0.05730564395586649,
+          "correct": true
+        },
+        {
+          "video_id": "13_32",
+          "probability": 0.49758756160736084,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.06198503077030182,
+          "correct": false
+        },
+        {
+          "video_id": "13_12",
+          "probability": 0.4727436900138855,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.056945944825808205,
+          "correct": false
+        },
+        {
+          "video_id": "13_44",
+          "probability": 0.4854124188423157,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.06349187592665355,
+          "correct": false
+        },
+        {
+          "video_id": "13_24",
+          "probability": 0.4796397089958191,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.06200715899467468,
+          "correct": false
+        },
+        {
+          "video_id": "13_36",
+          "probability": 0.4883747398853302,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.07083893318970998,
+          "correct": false
+        },
+        {
+          "video_id": "13_45",
+          "probability": 0.4818178117275238,
+          "prediction": 0,
+          "ground_truth": 1,
+          "matching_cost": 0.06008882323900858,
+          "correct": false
+        },
+        {
+          "video_id": "13_9",
+          "probability": 0.47587379813194275,
+          "prediction": 0,
+          "ground_truth": 0,
+          "matching_cost": 0.056316827734311424,
+          "correct": true
+        },
+        {
+          "video_id": "13_20",
+          "probability": 0.4883081018924713,
+          "prediction": 0,
+          "ground_truth": 0,
+          "matching_cost": 0.06271816790103912,
+          "correct": true
+        }
+      ]
+    },
+    {
+      "recipe_id": "15",
+      "checkpoint": "substep3_step_detection/checkpoints_graph_test/task_graph_matcher_recipe_15.pth",
+      "epoch": 1,
+      "num_test_videos": 15,
+      "metrics": {
+        "accuracy": 0.6666666666666666,
+        "precision": 0.6666666666666666,
+        "recall": 1.0,
+        "f1": 0.8,
+        "avg_matching_cost": 0.10718928429118375,
+        "threshold": 0.5,
+        "auc": 0.49999999999999994,
+        "confusion_matrix": [
+          [
+            0,
+            5
+          ],
+          [
+            0,
+            10
+          ]
+        ]
+      },
+      "predictions": [
+        {
+          "video_id": "15_30",
+          "probability": 0.5265621542930603,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.11680934303685238,
+          "correct": true
+        },
+        {
+          "video_id": "15_2",
+          "probability": 0.5314462780952454,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.11112802907040245,
+          "correct": false
+        },
+        {
+          "video_id": "15_4",
+          "probability": 0.5449348092079163,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.10799765586853027,
+          "correct": false
+        },
+        {
+          "video_id": "15_33",
+          "probability": 0.5414599776268005,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.10311101612291838,
+          "correct": true
+        },
+        {
+          "video_id": "15_8",
+          "probability": 0.5291804671287537,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.10904325936969958,
+          "correct": false
+        },
+        {
+          "video_id": "15_41",
+          "probability": 0.5188899040222168,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.10169816017150879,
+          "correct": true
+        },
+        {
+          "video_id": "15_28",
+          "probability": 0.5409827828407288,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.09877698672445197,
+          "correct": true
+        },
+        {
+          "video_id": "15_18",
+          "probability": 0.5141515731811523,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.09875897357338353,
+          "correct": false
+        },
+        {
+          "video_id": "15_17",
+          "probability": 0.5450491309165955,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.11158382265191329,
+          "correct": true
+        },
+        {
+          "video_id": "15_29",
+          "probability": 0.5213292241096497,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.11443233489990234,
+          "correct": true
+        },
+        {
+          "video_id": "15_37",
+          "probability": 0.5376488566398621,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.10897041621961091,
+          "correct": true
+        },
+        {
+          "video_id": "15_19",
+          "probability": 0.5359820127487183,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.10841235361601177,
+          "correct": true
+        },
+        {
+          "video_id": "15_39",
+          "probability": 0.5423089265823364,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.10707265452334755,
+          "correct": true
+        },
+        {
+          "video_id": "15_46",
+          "probability": 0.5360147953033447,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.10804201427258943,
+          "correct": true
+        },
+        {
+          "video_id": "15_5",
+          "probability": 0.5455197095870972,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.10200224424663343,
+          "correct": false
+        }
+      ]
+    },
+    {
+      "recipe_id": "16",
+      "checkpoint": "substep3_step_detection/checkpoints_graph_test/task_graph_matcher_recipe_16.pth",
+      "epoch": 1,
+      "num_test_videos": 16,
+      "metrics": {
+        "accuracy": 0.625,
+        "precision": 0.625,
+        "recall": 1.0,
+        "f1": 0.7692307692307693,
+        "avg_matching_cost": 0.10653107062630031,
+        "threshold": 0.5,
+        "auc": 0.6166666666666667,
+        "confusion_matrix": [
+          [
+            0,
+            6
+          ],
+          [
+            0,
+            10
+          ]
+        ]
+      },
+      "predictions": [
+        {
+          "video_id": "16_2",
+          "probability": 0.514514148235321,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.10660727127738621,
+          "correct": true
+        },
+        {
+          "video_id": "16_26",
+          "probability": 0.5227985382080078,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.10551277450893236,
+          "correct": true
+        },
+        {
+          "video_id": "16_40",
+          "probability": 0.5118653774261475,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.10859155654907227,
+          "correct": true
+        },
+        {
+          "video_id": "16_28",
+          "probability": 0.5135456919670105,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.101846342501433,
+          "correct": true
+        },
+        {
+          "video_id": "16_3",
+          "probability": 0.5098316073417664,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.11672292584958284,
+          "correct": false
+        },
+        {
+          "video_id": "16_39",
+          "probability": 0.5080028772354126,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.10344931353693423,
+          "correct": true
+        },
+        {
+          "video_id": "16_18",
+          "probability": 0.5199527144432068,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.1069380926049274,
+          "correct": true
+        },
+        {
+          "video_id": "16_10",
+          "probability": 0.5167387127876282,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.1060652318208114,
+          "correct": false
+        },
+        {
+          "video_id": "16_42",
+          "probability": 0.5158680081367493,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.10796094977337381,
+          "correct": true
+        },
+        {
+          "video_id": "16_23",
+          "probability": 0.5149523615837097,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.10922986528147823,
+          "correct": false
+        },
+        {
+          "video_id": "16_1",
+          "probability": 0.5134564638137817,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.09377139547596806,
+          "correct": false
+        },
+        {
+          "video_id": "16_20",
+          "probability": 0.5072346329689026,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.11574306695357613,
+          "correct": false
+        },
+        {
+          "video_id": "16_17",
+          "probability": 0.5156638026237488,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.11147958299388057,
+          "correct": false
+        },
+        {
+          "video_id": "16_27",
+          "probability": 0.5118011832237244,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.10568351330964462,
+          "correct": true
+        },
+        {
+          "video_id": "16_35",
+          "probability": 0.5142632722854614,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.10412740707397461,
+          "correct": true
+        },
+        {
+          "video_id": "16_44",
+          "probability": 0.5172550082206726,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.10076784050982932,
+          "correct": true
+        }
+      ]
+    },
+    {
+      "recipe_id": "17",
+      "checkpoint": "substep3_step_detection/checkpoints_graph_test/task_graph_matcher_recipe_17.pth",
+      "epoch": 1,
+      "num_test_videos": 20,
+      "metrics": {
+        "accuracy": 0.4,
+        "precision": 0.4,
+        "recall": 1.0,
+        "f1": 0.5714285714285714,
+        "avg_matching_cost": 0.09874423552643169,
+        "threshold": 0.5,
+        "auc": 0.5208333333333334,
+        "confusion_matrix": [
+          [
+            0,
+            12
+          ],
+          [
+            0,
+            8
+          ]
+        ]
+      },
+      "predictions": [
+        {
+          "video_id": "17_16",
+          "probability": 0.5079368948936462,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.09863818775523793,
+          "correct": false
+        },
+        {
+          "video_id": "17_19",
+          "probability": 0.506065309047699,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.10581343824213202,
+          "correct": false
+        },
+        {
+          "video_id": "17_10",
+          "probability": 0.5074903964996338,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.09970111196691339,
+          "correct": false
+        },
+        {
+          "video_id": "17_43",
+          "probability": 0.5059491991996765,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.09370403940027411,
+          "correct": true
+        },
+        {
+          "video_id": "17_3",
+          "probability": 0.5050309896469116,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.10223200104453346,
+          "correct": false
+        },
+        {
+          "video_id": "17_36",
+          "probability": 0.5132359862327576,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.08401650190353394,
+          "correct": true
+        },
+        {
+          "video_id": "17_5",
+          "probability": 0.503839373588562,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.11252215775576505,
+          "correct": false
+        },
+        {
+          "video_id": "17_29",
+          "probability": 0.504610002040863,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.08900735053149136,
+          "correct": true
+        },
+        {
+          "video_id": "17_14",
+          "probability": 0.5046719312667847,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.1048186258836226,
+          "correct": false
+        },
+        {
+          "video_id": "17_11",
+          "probability": 0.5116016864776611,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.10192251205444336,
+          "correct": false
+        },
+        {
+          "video_id": "17_37",
+          "probability": 0.5095345377922058,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.09406792033802379,
+          "correct": true
+        },
+        {
+          "video_id": "17_23",
+          "probability": 0.5039798617362976,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.10123674436049028,
+          "correct": false
+        },
+        {
+          "video_id": "17_21",
+          "probability": 0.5045990943908691,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.10294484008442271,
+          "correct": false
+        },
+        {
+          "video_id": "17_45",
+          "probability": 0.5058574080467224,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.0982183651490645,
+          "correct": true
+        },
+        {
+          "video_id": "17_49",
+          "probability": 0.5036110281944275,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.09626393968408758,
+          "correct": true
+        },
+        {
+          "video_id": "17_40",
+          "probability": 0.5028143525123596,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.09079785238612782,
+          "correct": true
+        },
+        {
+          "video_id": "17_15",
+          "probability": 0.5037237405776978,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.10595312985506924,
+          "correct": false
+        },
+        {
+          "video_id": "17_20",
+          "probability": 0.5051754117012024,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.10279868949543346,
+          "correct": false
+        },
+        {
+          "video_id": "17_28",
+          "probability": 0.5092161297798157,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.09544159065593373,
+          "correct": true
+        },
+        {
+          "video_id": "17_8",
+          "probability": 0.5095861554145813,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.09478571198203346,
+          "correct": false
+        }
+      ]
+    },
+    {
+      "recipe_id": "18",
+      "checkpoint": "substep3_step_detection/checkpoints_graph_test/task_graph_matcher_recipe_18.pth",
+      "epoch": 1,
+      "num_test_videos": 15,
+      "metrics": {
+        "accuracy": 0.7333333333333333,
+        "precision": 0.7333333333333333,
+        "recall": 1.0,
+        "f1": 0.8461538461538461,
+        "avg_matching_cost": 0.12528101052993385,
+        "threshold": 0.5,
+        "auc": 0.7272727272727273,
+        "confusion_matrix": [
+          [
+            0,
+            4
+          ],
+          [
+            0,
+            11
+          ]
+        ]
+      },
+      "predictions": [
+        {
+          "video_id": "18_3",
+          "probability": 0.5897371172904968,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.1259308044727032,
+          "correct": true
+        },
+        {
+          "video_id": "18_41",
+          "probability": 0.5949544310569763,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.12433950717632587,
+          "correct": true
+        },
+        {
+          "video_id": "18_28",
+          "probability": 0.5959765315055847,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.12750988740187424,
+          "correct": true
+        },
+        {
+          "video_id": "18_33",
+          "probability": 0.5904326438903809,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.12182046816899227,
+          "correct": true
+        },
+        {
+          "video_id": "18_2",
+          "probability": 0.5909169316291809,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.12296483149895301,
+          "correct": true
+        },
+        {
+          "video_id": "18_19",
+          "probability": 0.5955766439437866,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.12859247281001165,
+          "correct": false
+        },
+        {
+          "video_id": "18_11",
+          "probability": 0.5878807902336121,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.12474991725041316,
+          "correct": true
+        },
+        {
+          "video_id": "18_31",
+          "probability": 0.5947644114494324,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.11552866605611947,
+          "correct": true
+        },
+        {
+          "video_id": "18_45",
+          "probability": 0.5826719999313354,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.1241235091136052,
+          "correct": true
+        },
+        {
+          "video_id": "18_12",
+          "probability": 0.5783326029777527,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.12990705783550555,
+          "correct": false
+        },
+        {
+          "video_id": "18_101",
+          "probability": 0.588688850402832,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.12801741636716402,
+          "correct": true
+        },
+        {
+          "video_id": "18_27",
+          "probability": 0.594562292098999,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.12113527151254508,
+          "correct": true
+        },
+        {
+          "video_id": "18_49",
+          "probability": 0.5878270268440247,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.12832451783693755,
+          "correct": true
+        },
+        {
+          "video_id": "18_8",
+          "probability": 0.5843230485916138,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.12796864142784706,
+          "correct": false
+        },
+        {
+          "video_id": "18_24",
+          "probability": 0.5861443281173706,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.12830218902001014,
+          "correct": false
+        }
+      ]
+    },
+    {
+      "recipe_id": "20",
+      "checkpoint": "substep3_step_detection/checkpoints_graph_test/task_graph_matcher_recipe_20.pth",
+      "epoch": 1,
+      "num_test_videos": 14,
+      "metrics": {
+        "accuracy": 0.5714285714285714,
+        "precision": 0.5714285714285714,
+        "recall": 1.0,
+        "f1": 0.7272727272727273,
+        "avg_matching_cost": 0.11856439000084286,
+        "threshold": 0.5,
+        "auc": 0.5625,
+        "confusion_matrix": [
+          [
+            0,
+            6
+          ],
+          [
+            0,
+            8
+          ]
+        ]
+      },
+      "predictions": [
+        {
+          "video_id": "20_14",
+          "probability": 0.5071216821670532,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.11319820086161296,
+          "correct": false
+        },
+        {
+          "video_id": "20_44",
+          "probability": 0.5118024945259094,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.12381727165646023,
+          "correct": true
+        },
+        {
+          "video_id": "20_17",
+          "probability": 0.520797073841095,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.11215570237901476,
+          "correct": false
+        },
+        {
+          "video_id": "20_16",
+          "probability": 0.5195699334144592,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.11760885185665554,
+          "correct": false
+        },
+        {
+          "video_id": "20_32",
+          "probability": 0.5215647220611572,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.1194264358944363,
+          "correct": true
+        },
+        {
+          "video_id": "20_25",
+          "probability": 0.5135126709938049,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.11731380886501735,
+          "correct": true
+        },
+        {
+          "video_id": "20_47",
+          "probability": 0.519330620765686,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.11822982629140218,
+          "correct": true
+        },
+        {
+          "video_id": "20_26",
+          "probability": 0.5173872113227844,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.11694928010304768,
+          "correct": true
+        },
+        {
+          "video_id": "20_39",
+          "probability": 0.5186190009117126,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.12039085229237874,
+          "correct": true
+        },
+        {
+          "video_id": "20_48",
+          "probability": 0.5149903893470764,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.11644742223951551,
+          "correct": true
+        },
+        {
+          "video_id": "20_29",
+          "probability": 0.5112146735191345,
+          "prediction": 1,
+          "ground_truth": 1,
+          "matching_cost": 0.12459501955244276,
+          "correct": true
+        },
+        {
+          "video_id": "20_9",
+          "probability": 0.5105046033859253,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.12263690100775824,
+          "correct": false
+        },
+        {
+          "video_id": "20_19",
+          "probability": 0.5199781656265259,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.12010151810116237,
+          "correct": false
+        },
+        {
+          "video_id": "20_22",
+          "probability": 0.5072537660598755,
+          "prediction": 1,
+          "ground_truth": 0,
+          "matching_cost": 0.11703036891089545,
+          "correct": false
+        }
+      ]
+    }
+  ]
+}

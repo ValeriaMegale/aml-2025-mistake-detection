@@ -203,3 +203,5 @@ Il sistema funziona correttamente se:
 Una volta completato Substep 1, puoi procedere a:
 - **Substep 2**: Task verification baselines usando gli step embeddings generati
 - Gli embeddings sono pronti in formato NPY per essere usati nei modelli downstream
+
+
