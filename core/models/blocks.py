@@ -44,9 +44,9 @@ class MLP(nn.Module):
 import torch
 import torch.nn as nn
 
-class RNNBaseline(nn.Module):
+class LSTMBaseline(nn.Module):
     def __init__(self, input_dim, hidden_dim, num_layers, output_dim=1, dropout=0.5):
-        super(RNNBaseline, self).__init__()
+        super(LSTMBaseline, self).__init__()
         self.hidden_dim = hidden_dim
         self.num_layers = num_layers
         

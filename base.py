@@ -14,7 +14,7 @@ from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_sco
 from torcheval.metrics.functional import binary_auprc
 from tqdm import tqdm
 
-from core.models.blocks import fetch_input_dim, MLP, RNNBaseline
+from core.models.blocks import fetch_input_dim, MLP, LSTMBaseline
 from core.models.er_former import ErFormer
 from dataloader.CaptainCookStepDataset import collate_fn, CaptainCookStepDataset
 from dataloader.CaptainCookSubStepDataset import CaptainCookSubStepDataset
@@ -60,7 +60,7 @@ def fetch_model(config):
             hidden_dim = 128
             num_layers = 2
             dropout = 0.5  # Dropout aumentato per contrastare overfitting
-            model = RNNBaseline(input_dim, hidden_dim, num_layers, output_dim=1, dropout=dropout)
+            model = LSTMBaseline(input_dim, hidden_dim, num_layers, output_dim=1, dropout=dropout)
 
     assert model is not None, f"Model not found for variant: {config.variant} and backbone: {config.backbone}"
     model.to(config.device)
