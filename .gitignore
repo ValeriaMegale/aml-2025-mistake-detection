@@ -162,7 +162,7 @@ cython_debug/
 
 .venv
 data
-checkpoints
+
 wandb
 stats
 error_recognition_best
