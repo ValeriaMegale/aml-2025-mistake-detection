@@ -125,7 +125,12 @@ def store_model(model, config, ckpt_name: str):
     backbone_directory = os.path.join(variant_directory, config.backbone)
     os.makedirs(backbone_directory, exist_ok=True)
 
-    ckpt_file_path = os.path.join(backbone_directory, ckpt_name)
+    # Add learning rate subdirectory to avoid overwriting checkpoints with different LR
+    lr_str = f"lr_{config.lr}".replace('.', '_').replace('-', '_')
+    lr_directory = os.path.join(backbone_directory, lr_str)
+    os.makedirs(lr_directory, exist_ok=True)
+
+    ckpt_file_path = os.path.join(lr_directory, ckpt_name)
     torch.save(model.state_dict(), ckpt_file_path)
 
 
