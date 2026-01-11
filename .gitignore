@@ -171,7 +171,8 @@ stats
 .vscode
 
 ckpt/
-
+checkpoints/
+checkpoints_selected/
 checkpoints_graph/
 checkpoints_graph_test/
 # Checkpoint files
