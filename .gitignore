@@ -173,6 +173,7 @@ stats
 ckpt/
 checkpoints/
 checkpoints_selected/
+checkpoints_hiero/
 checkpoints_graph/
 checkpoints_graph_test/
 # Checkpoint files
