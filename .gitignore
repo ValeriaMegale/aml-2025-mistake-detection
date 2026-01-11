@@ -174,3 +174,10 @@ ckpt/
 
 checkpoints_graph/
 checkpoints_graph_test/
+# Checkpoint files
+extension_task_verification/checkpoints_hiero/
+substep4/checkpoints_gnn/
+
+# Log files
+*.out
+nohup*.out

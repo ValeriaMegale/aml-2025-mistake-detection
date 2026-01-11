@@ -369,7 +369,7 @@ The extension consists of four main substeps:
 - Step segments: `[(start1, end1), (start2, end2), ...]` for each video
 - Step embeddings: Average-pooled features within each segment `[N_steps, 768]`
 
-**Implementation**: `extension_localization_hiero/`
+**Implementation**: `extension/substep1_step_localization/`
 
 **Results**: Step segments and embeddings generated for all videos in the dataset.
 
@@ -389,7 +389,7 @@ The extension consists of four main substeps:
 - Binary classification: 1 if video has ANY errors, 0 otherwise
 - BCE loss
 
-**Implementation**: `extension_task_verification/train_task_verification_hiero.py`
+**Implementation**: `extension/substep2_task_verification/train_task_verification_hiero.py`
 
 **Results**: Evaluation on 24 recipes (leave-one-out)
 
@@ -428,7 +428,7 @@ The extension consists of four main substeps:
 - Leave-one-recipe-out cross-validation
 - Per-recipe checkpoints: `task_graph_matcher_recipe_{id}.pth`
 
-**Implementation**: `substep3_step_detection/`
+**Implementation**: `extension/substep3_task_graph_matching/`
 
 **Results**: Evaluation on 10/24 recipes (checkpoints available)
 
@@ -479,7 +479,7 @@ The extension consists of four main substeps:
 - Leave-one-recipe-out cross-validation
 - Per-recipe checkpoints: `gnn_classifier_recipe_{id}.pth`
 
-**Implementation**: `substep4/`
+**Implementation**: `extension/substep4_gnn_classification/`
 
 **Results**: Evaluation on 24 recipes (leave-one-out)
 
