@@ -56,10 +56,9 @@ def fetch_model(config):
     elif config.variant == const.RNN_VARIANT:
         if config.backbone in [const.OMNIVORE, const.RESNET3D, const.X3D, const.SLOWFAST, const.IMAGEBIND, const.PERCEPTION]:
             input_dim = fetch_input_dim(config)
-            # Usa parametri simili a quelli comuni per RNN
             hidden_dim = 128
             num_layers = 2
-            dropout = 0.5  # Dropout aumentato per contrastare overfitting
+            dropout = 0.5
             model = LSTMBaseline(input_dim, hidden_dim, num_layers, output_dim=1, dropout=dropout)
 
     assert model is not None, f"Model not found for variant: {config.variant} and backbone: {config.backbone}"
@@ -79,7 +78,6 @@ def collate_stats(config, sub_step_metrics, step_metrics):
     for metric in [const.PRECISION, const.RECALL, const.F1, const.ACCURACY, const.AUC, const.PR_AUC]:
         collated_stats.append(convert_and_round(sub_step_metrics[metric]))
     for metric in [const.PRECISION, const.RECALL, const.F1, const.ACCURACY, const.AUC, const.PR_AUC]:
-        # Round to two digits before appending
         collated_stats.append(convert_and_round(step_metrics[metric]))
     return collated_stats
 
@@ -111,7 +109,6 @@ def save_results_to_csv(config, sub_step_metrics, step_metrics, step_normalizati
 
 def save_results(config, sub_step_metrics, step_metrics, step_normalization=False, sub_step_normalization=False,
                  threshold=0.5):
-    # 1. Save evaluation results to csv
     save_results_to_csv(config, sub_step_metrics, step_metrics, step_normalization, sub_step_normalization, threshold)
 
 
@@ -125,16 +122,12 @@ def store_model(model, config, ckpt_name: str):
     backbone_directory = os.path.join(variant_directory, config.backbone)
     os.makedirs(backbone_directory, exist_ok=True)
 
-    # Add learning rate subdirectory to avoid overwriting checkpoints with different LR
     lr_str = f"lr_{config.lr}".replace('.', '_').replace('-', '_')
     lr_directory = os.path.join(backbone_directory, lr_str)
     os.makedirs(lr_directory, exist_ok=True)
 
     ckpt_file_path = os.path.join(lr_directory, ckpt_name)
     torch.save(model.state_dict(), ckpt_file_path)
-
-
-# ----------------------- TRAIN BASE FILES -----------------------
 
 
 def train_epoch(model, device, train_loader, optimizer, epoch, criterion):
@@ -155,7 +148,7 @@ def train_epoch(model, device, train_loader, optimizer, epoch, criterion):
         assert not torch.isnan(loss).any(), "Loss contains NaN values"
 
         loss.backward()
-        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)  # Gradient clipping
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
         optimizer.step()
         train_losses.append(loss.item())
         train_loader.set_description(
@@ -174,7 +167,6 @@ def train_model_base(train_loader, val_loader, config, test_loader=None):
         print("CUDA not available, using CPU")
     device = config.device
     model = fetch_model(config)
-    # Verifica che il modello sia su CUDA
     next_param = next(model.parameters())
     print(f"Model device: {next_param.device}, Model on CUDA: {next_param.is_cuda}")
     optimizer = optim.Adam(model.parameters(), lr=config.lr, weight_decay=config.weight_decay)
@@ -184,8 +176,6 @@ def train_model_base(train_loader, val_loader, config, test_loader=None):
         factor=0.1, patience=5, verbose=True,
         threshold=1e-4, threshold_mode="abs", min_lr=1e-7
     )
-    # criterion = nn.BCEWithLogitsLoss()
-    # Initialize variables to track the best model based on the desired metric (e.g., AUC)
     best_model = {'model_state': None, 'metric': 0}
 
     model_name = config.model_name
@@ -198,7 +188,6 @@ def train_model_base(train_loader, val_loader, config, test_loader=None):
     train_stats_file = f"{model_name}_training_performance.txt"
     train_stats_file_path = os.path.join(train_stats_directory, train_stats_file)
 
-    # Open a file to store the losses and metrics
     with open(train_stats_file_path, 'w') as f:
         f.write('Epoch, Train Loss, Test Loss, Precision, Recall, F1, AUC\n')
         for epoch in range(1, config.num_epochs + 1):
@@ -221,10 +210,8 @@ def train_model_base(train_loader, val_loader, config, test_loader=None):
                     print(f"Loss contains NaN values in epoch {epoch}, batch {batch_idx}")
                     continue
 
-                # assert not torch.isnan(loss).any(), "Loss contains NaN values"
-
                 loss.backward()
-                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)  # Gradient clipping
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
                 optimizer.step()
                 train_losses.append(loss.item())
                 train_loader.set_description(
@@ -248,7 +235,6 @@ def train_model_base(train_loader, val_loader, config, test_loader=None):
             f1 = step_metrics['f1']
             auc = step_metrics['auc']
 
-            # Write losses and metrics to file
             f.write(
                 f'{epoch}, {avg_train_loss:.6f}, {avg_val_loss:.6f}, {avg_test_loss:.6f}, {precision:.6f}, {recall:.6f}, {f1:.6f}, {auc:.6f}\n')
 
@@ -273,14 +259,12 @@ def train_model_base(train_loader, val_loader, config, test_loader=None):
             print(f'Epoch: {epoch}, Train Loss: {avg_train_loss:.6f}, Val Loss: {avg_val_loss:.6f}, Test Loss: {avg_test_loss:.6f}, '
                   f'Precision: {precision:.6f}, Recall: {recall:.6f}, F1: {f1:.6f}, AUC: {auc:.6f}')
 
-            # Update best model based on the chosen metric, here using AUC as an example
             if auc > best_model['metric']:
                 best_model['metric'] = auc
                 best_model['model_state'] = model.state_dict()
 
             store_model(model, config, ckpt_name=f"{model_name}_epoch_{epoch}.pt")
 
-        # Save the best model
         if best_model['model_state'] is not None:
             model.load_state_dict(best_model['model_state'])
             store_model(model, config, ckpt_name=f"{model_name}_best.pt")
@@ -319,7 +303,7 @@ def train_sub_step_test_step_dataset_base(config):
     torch.manual_seed(config.seed)
 
     cuda_kwargs = {
-        "num_workers": 0,  # Aumentato per migliorare il data loading
+        "num_workers": 0,
         "pin_memory": True,
     }
     train_kwargs = {**cuda_kwargs, "shuffle": True, "batch_size": 1024}
@@ -342,12 +326,8 @@ def train_sub_step_test_step_dataset_base(config):
     return train_loader, val_loader, test_loader
 
 
-# ----------------------- TEST BASE FILES -----------------------
-
-
 def test_er_model(model, test_loader, criterion, device, phase, step_normalization=True, sub_step_normalization=True,
                   threshold=0.6):
-    # IMPORTANTE: metti il modello in eval mode per disabilitare dropout e batch norm durante la validazione
     model.eval()
     
     total_samples = 0
@@ -383,14 +363,11 @@ def test_er_model(model, test_loader, criterion, device, phase, step_normalizati
     all_outputs = np.concatenate(all_outputs)
     all_targets = np.concatenate(all_targets)
 
-    # Assert that none of the outputs are NaN
     assert not np.isnan(all_outputs).any(), "Outputs contain NaN values"
 
-    # ------------------------- Sub-Step Level Metrics -------------------------
     all_sub_step_targets = all_targets.copy()
     all_sub_step_outputs = all_outputs.copy()
 
-    # Calculate metrics at the sub-step level
     pred_sub_step_labels = (all_sub_step_outputs > 0.5).astype(int)
     sub_step_precision = precision_score(all_sub_step_targets, pred_sub_step_labels)
     sub_step_recall = recall_score(all_sub_step_targets, pred_sub_step_labels)
@@ -408,30 +385,14 @@ def test_er_model(model, test_loader, criterion, device, phase, step_normalizati
         const.PR_AUC: sub_step_pr_auc
     }
 
-    # -------------------------- Step Level Metrics --------------------------
     all_step_targets = []
     all_step_outputs = []
-
-    # threshold_outputs = all_outputs / max_probability
 
     for start, end in test_step_start_end_list:
         step_output = all_outputs[start:end]
         step_target = all_targets[start:end]
 
-        # sorted_step_output = np.sort(step_output)
-        # # Top 50% of the predictions
-        # threshold = np.percentile(sorted_step_output, 50)
-        # step_output = step_output[step_output > threshold]
-
-        # pos_output = step_output[step_output > 0.5]
-        # neg_output = step_output[step_output <= 0.5]
-        #
-        # if len(pos_output) > len(neg_output):
-        #     step_output = pos_output
-        # else:
-        #     step_output = neg_output
         step_output = np.array(step_output)
-        # # Scale the output to [0, 1]
         if start - end > 1:
             if sub_step_normalization:
                 prob_range = np.max(step_output) - np.min(step_output)
@@ -445,14 +406,12 @@ def test_er_model(model, test_loader, criterion, device, phase, step_normalizati
 
     all_step_outputs = np.array(all_step_outputs)
 
-    # # Scale the output to [0, 1]
     if step_normalization:
         prob_range = np.max(all_step_outputs) - np.min(all_step_outputs)
         all_step_outputs = (all_step_outputs - np.min(all_step_outputs)) / prob_range
 
     all_step_targets = np.array(all_step_targets)
 
-    # Calculate metrics at the step level
     pred_step_labels = (all_step_outputs > threshold).astype(int)
     precision = precision_score(all_step_targets, pred_step_labels, zero_division=0)
     recall = recall_score(all_step_targets, pred_step_labels)
@@ -471,7 +430,6 @@ def test_er_model(model, test_loader, criterion, device, phase, step_normalizati
         const.PR_AUC: pr_auc
     }
 
-    # Print step level metrics
     print("----------------------------------------------------------------")
     print(f'{phase} Sub Step Level Metrics: {sub_step_metrics}')
     print(f"{phase} Step Level Metrics: {step_metrics}")

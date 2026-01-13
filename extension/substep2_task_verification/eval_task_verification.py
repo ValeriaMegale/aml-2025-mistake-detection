@@ -12,20 +12,16 @@ except ImportError:
     from model.task_verifier import TaskVerifier
 
 
-# --- DATASET & UTILS (Devono essere identici al train) ---
 def load_annotations(json_path):
     with open(json_path, 'r') as f: return json.load(f)
 
 
 def get_binary_label(video_id, steps, annotation_map):
-    # Corretto: controlla se il video_id ha errori in annotation_map
     if video_id not in annotation_map:
         return 0.0
     video_data = annotation_map[video_id]
-    # Se il video ha il flag 'has_errors' a True
     if video_data.get('has_errors', False):
         return 1.0
-    # Altrimenti controlla se almeno uno step ha errori
     if 'steps' in video_data:
         for step in video_data['steps']:
             if step.get('has_errors', False):
@@ -60,7 +56,6 @@ def collate_fn(batch):
     return padded, torch.stack(lbls), mask
 
 
-# --- EVALUATION LOGIC ---
 def run_evaluation(args):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -76,7 +71,6 @@ def run_evaluation(args):
     print(f"Starting Evaluation on {len(recipes)} folds using checkpoints in '{args.ckpt_dir}'")
 
     for test_recipe in recipes:
-        # Test set = SOLO i video della ricetta corrente
         test_ids = [v for v in all_videos if v.startswith(f"{test_recipe}_")]
 
         test_ds = RecipeTaskDataset(data_dict, test_ids, annotation_map)
@@ -84,7 +78,6 @@ def run_evaluation(args):
 
         test_loader = DataLoader(test_ds, batch_size=1, shuffle=False, collate_fn=collate_fn)
 
-        # Caricamento del modello specifico per questo fold
         ckpt_path = os.path.join(args.ckpt_dir, f"model_holdout_{test_recipe}.pth")
 
         if not os.path.exists(ckpt_path):
@@ -128,8 +121,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     run_evaluation(args)
-
-# Esempio run OMNIVORE:
-# python extension_task_verification/eval_task_verification.py --npy extension_localization/data/step_embeddings.npy --annotations extension_localization/data/step_annotations.json --ckpt_dir extension_task_verification/checkpoints
-# Esempio run PERCEPTION:
-# python extension_task_verification/eval_task_verification.py --npy extension_localization/data/step_embeddings_perception.npy --annotations extension_localization/data/step_annotations.json --ckpt_dir extension_task_verification/checkpoints

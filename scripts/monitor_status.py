@@ -113,7 +113,6 @@ def main():
     if check_results_dir(results_dir):
         result_files = list(Path(results_dir).glob("*"))
         print(f"  ✅ Risultati disponibili ({len(result_files)} files)")
-        # Verifica se c'è il summary
         if (Path(results_dir) / "results_summary.csv").exists():
             print("  ✅ Summary CSV disponibile")
     else:
@@ -141,7 +140,6 @@ def main():
     else:
         print("  ⚠️  Training non ancora completato")
     
-    # Verifica log e progresso
     log_path = "/tmp/train_gnn_full.log"
     if os.path.exists(log_path):
         print(f"  📝 Log disponibile: {log_path}")

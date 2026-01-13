@@ -40,7 +40,6 @@ def compute_step_embeddings(video_id, segments, features, config):
         embeddings: numpy array of shape [N, D] where N is number of segments
         segment_info: list of dicts with metadata for each segment
     """
-    # Extract config parameters with defaults
     feat_stride = config.get('feat_stride', 1.0)
     fps = config.get('fps', 30.0)
     pooling_method = config.get('pooling_method', 'mean')
@@ -58,26 +57,19 @@ def compute_step_embeddings(video_id, segments, features, config):
     segment_info = []
     
     for seg_idx, (start_time, end_time) in enumerate(segments):
-        # Convert timestamps to feature indices
         start_idx = time_to_feature_index(start_time, feat_stride, fps)
         end_idx = time_to_feature_index(end_time, feat_stride, fps)
         
-        # Clamp indices to valid range
         start_idx = max(0, min(start_idx, T - 1))
         end_idx = max(start_idx + 1, min(end_idx, T))
         
-        # Extract features for this segment
         segment_features = features[start_idx:end_idx]
         
-        # Handle edge case: empty segment
         if segment_features.shape[0] == 0:
-            # Use single feature at start_idx as fallback
             segment_features = features[start_idx:start_idx+1]
             if segment_features.shape[0] == 0:
-                # Last resort: use first feature
                 segment_features = features[0:1]
         
-        # Pool features (average by default)
         if pooling_method == 'mean':
             step_embedding = np.mean(segment_features, axis=0)
         elif pooling_method == 'max':
@@ -85,7 +77,6 @@ def compute_step_embeddings(video_id, segments, features, config):
         else:
             raise ValueError(f"Unknown pooling method: {pooling_method}")
         
-        # Ensure embedding has correct shape
         if step_embedding.ndim == 0:
             step_embedding = np.array([step_embedding])
         elif step_embedding.ndim > 1:
@@ -93,7 +84,6 @@ def compute_step_embeddings(video_id, segments, features, config):
         
         embeddings.append(step_embedding)
         
-        # Store metadata
         segment_info.append({
             'segment_idx': seg_idx,
             'start_time': start_time,
@@ -104,10 +94,8 @@ def compute_step_embeddings(video_id, segments, features, config):
             'duration': end_time - start_time
         })
     
-    # Convert to numpy array
     if len(embeddings) > 0:
         embeddings = np.array(embeddings)
-        # Ensure shape is [N, D]
         if embeddings.ndim == 1:
             embeddings = embeddings.reshape(1, -1)
     else:

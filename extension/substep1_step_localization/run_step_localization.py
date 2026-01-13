@@ -74,7 +74,6 @@ def build_feature_file_map(feat_folder):
 def get_video_list(split='all'):
     """Get list of video IDs based on split."""
     if split == 'all':
-        # Load all videos from data splits
         split_files = [
             'annotations/data_splits/recordings_data_split_combined.json',
             'annotations/data_splits/person_data_split_combined.json',
@@ -90,7 +89,6 @@ def get_video_list(split='all'):
                             all_videos.update(data[phase])
         return list(all_videos)
     else:
-        # Load specific split
         split_file = f'annotations/data_splits/recordings_data_split_combined.json'
         if os.path.exists(split_file):
             with open(split_file, 'r') as f:
@@ -102,7 +100,6 @@ def get_video_list(split='all'):
 
 def process_video(video_id, feat_path, config):
     """Process a single video: localize steps and compute embeddings."""
-    # Load features
     features = load_features_from_npz(feat_path)
     if features is None:
         return None, None, None
@@ -128,7 +125,6 @@ def process_video(video_id, feat_path, config):
 
 def main(args):
     """Main pipeline execution."""
-    # Load configuration
     if args.config:
         config = load_config(args.config)
     else:
@@ -172,7 +168,6 @@ def main(args):
         print("ERROR: No feature files found!")
         return
     
-    # Get video list
     video_list = get_video_list(config['split'])
     
     # Filter to videos that have features
@@ -206,36 +201,28 @@ def main(args):
             if embeddings is not None and embeddings.shape[0] > 0:
                 all_embeddings[video_id] = embeddings
     
-    # Save outputs
     output_segments = config['output_segments']
     output_embeddings = config['output_embeddings']
     
-    # Make output paths absolute if relative
-    if not os.path.isabs(output_segments):
-        # Remove duplicate extension_localization_hiero if present
+        if not os.path.isabs(output_segments):
         if output_segments.startswith('extension_localization_hiero/'):
             output_segments = output_segments.replace('extension_localization_hiero/', '', 1)
         output_segments = os.path.join(os.path.dirname(__file__), output_segments)
     if not os.path.isabs(output_embeddings):
-        # Remove duplicate extension_localization_hiero if present
         if output_embeddings.startswith('extension_localization_hiero/'):
             output_embeddings = output_embeddings.replace('extension_localization_hiero/', '', 1)
         output_embeddings = os.path.join(os.path.dirname(__file__), output_embeddings)
     
-    # Create output directories
     os.makedirs(os.path.dirname(output_segments), exist_ok=True)
     os.makedirs(os.path.dirname(output_embeddings), exist_ok=True)
     
-    # Save segments JSON
     print(f"\nSaving segments to {output_segments}")
     with open(output_segments, 'w') as f:
         json.dump(all_segments, f, indent=2)
     
-    # Save embeddings NPY
     print(f"Saving embeddings to {output_embeddings}")
     np.save(output_embeddings, all_embeddings)
     
-    # Print summary
     print("\n" + "=" * 60)
     print("Summary")
     print("=" * 60)

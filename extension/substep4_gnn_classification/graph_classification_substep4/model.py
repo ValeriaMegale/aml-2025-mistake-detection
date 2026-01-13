@@ -17,17 +17,27 @@ class DAGNNConvWrapper(torch.nn.Module):
     """
     Simplified DAGNN layer wrapper using GraphConv.
     GraphConv works well with directed graphs including DAGs.
+    
+    FIX: Added residual connections and LayerNorm to prevent variance collapse.
     """
     def __init__(self, in_channels, K=10):
         super().__init__()
         self.K = K
         # Use GraphConv which works with directed graphs
         self.conv = GraphConv(in_channels, in_channels)
+        # Add LayerNorm to prevent variance collapse
+        self.norm = torch.nn.LayerNorm(in_channels)
     
     def forward(self, x, edge_index):
-        # Apply K propagation steps
-        for _ in range(self.K):
+        # Apply K propagation steps with residual connections
+        x_initial = x
+        for i in range(self.K):
+            x_residual = x
             x = self.conv(x, edge_index)
+            # Residual connection every 2 steps to prevent collapse
+            if i % 2 == 1:
+                x = x + x_residual
+            x = self.norm(x)  # Normalize to prevent variance collapse
             x = F.relu(x)
         return x
 
@@ -54,8 +64,6 @@ class DAGNNClassifier(torch.nn.Module):
         """
         super().__init__()
         
-        # Input projection: combina text + visual features in uno spazio comune
-        # Secondo traccia: "learnable projection of the node features and the visual features"
         self.input_proj = torch.nn.Sequential(
             torch.nn.Linear(in_channels, hidden_channels),
             torch.nn.LayerNorm(hidden_channels),
@@ -63,7 +71,6 @@ class DAGNNClassifier(torch.nn.Module):
             torch.nn.Dropout(dropout)
         )
         
-        # Second layer (opzionale, per maggior espressività)
         self.hidden_proj = torch.nn.Sequential(
             torch.nn.Linear(hidden_channels, hidden_channels),
             torch.nn.LayerNorm(hidden_channels),
@@ -71,15 +78,13 @@ class DAGNNClassifier(torch.nn.Module):
             torch.nn.Dropout(dropout)
         )
         
-        # DAGNN layer: specificamente progettato per Directed Acyclic Graphs
         self.dagnn = DAGNNConvWrapper(hidden_channels, K)
         
-        # Classification head (binary classification, output 1 dim)
         self.classifier = torch.nn.Sequential(
             torch.nn.Linear(hidden_channels, hidden_channels // 2),
             torch.nn.ReLU(),
             torch.nn.Dropout(dropout),
-            torch.nn.Linear(hidden_channels // 2, 1)  # Binary classification: 1 output
+            torch.nn.Linear(hidden_channels // 2, 1)
         )
         
     def forward(self, x, edge_index, batch):
@@ -94,18 +99,14 @@ class DAGNNClassifier(torch.nn.Module):
         Returns:
             logits: [batch_size, num_classes] - classification logits
         """
-        # Project input features
-        x = self.input_proj(x)  # [N_nodes, hidden_channels]
-        x = self.hidden_proj(x)  # [N_nodes, hidden_channels]
+        x = self.input_proj(x)
+        x = self.hidden_proj(x)
         
-        # DAGNN layer: propaga informazioni attraverso il DAG
-        x = self.dagnn(x, edge_index)  # [N_nodes, hidden_channels]
+        x = self.dagnn(x, edge_index)
         
-        # Global mean pooling: aggrega node embeddings a graph embedding
-        graph_embedding = global_mean_pool(x, batch)  # [batch_size, hidden_channels]
+        graph_embedding = global_mean_pool(x, batch)
         
-        # Classification
-        logits = self.classifier(graph_embedding)  # [batch_size, num_classes]
+        logits = self.classifier(graph_embedding)
         
         return logits
 

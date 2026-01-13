@@ -25,10 +25,9 @@ def compute_temporal_distance_matrix(features, distance_metric='cosine'):
     if distance_metric == 'cosine':
         # Normalize features
         norms = np.linalg.norm(features, axis=1, keepdims=True)
-        norms[norms == 0] = 1  # Avoid division by zero
+        norms[norms == 0] = 1
         features_norm = features / norms
         
-        # Cosine distance = 1 - cosine similarity
         similarity = np.dot(features_norm, features_norm.T)
         distance_matrix = 1 - similarity
     else:  # euclidean
@@ -50,18 +49,14 @@ def estimate_num_clusters(features, video_duration, min_segment_duration=2.0, ma
     Returns:
         n_clusters: estimated number of clusters
     """
-    # Heuristic: ~1 step every 10-15 seconds
     estimated_by_duration = int(video_duration / 12.0)
     
-    # Also consider feature variance (more variance = more potential steps)
     feature_variance = np.var(features, axis=0).mean()
     variance_factor = min(2.0, 1.0 + feature_variance / 100.0)
     estimated_by_variance = int(estimated_by_duration * variance_factor)
     
-    # Constrain by min/max
     n_clusters = max(2, min(max_segments, estimated_by_variance))
     
-    # Ensure we don't exceed temporal resolution
     max_by_resolution = int(video_duration / min_segment_duration)
     n_clusters = min(n_clusters, max_by_resolution)
     
@@ -106,11 +101,8 @@ def hierarchical_clustering_segmentation(features, n_clusters, distance_metric='
     else:
         # For shorter videos, use linkage + fcluster (more control)
         if distance_metric == 'cosine':
-            # Cosine distance needs special handling
             distance_matrix = compute_temporal_distance_matrix(features, 'cosine')
-            # Convert to condensed form for linkage
             condensed_distances = squareform(distance_matrix, checks=False)
-            # Ward doesn't work with precomputed distances, use average instead
             if linkage_method == 'ward':
                 Z = linkage(condensed_distances, method='average')
             else:
@@ -136,7 +128,6 @@ def cluster_labels_to_segments(cluster_labels, feat_stride=1.0, fps=30.0):
         segments: list of (start, end) tuples in seconds
     """
     segments = []
-    # Ensure cluster_labels is a numpy array of integers
     cluster_labels = np.asarray(cluster_labels, dtype=np.int32).flatten()
     T = len(cluster_labels)
     
@@ -151,12 +142,10 @@ def cluster_labels_to_segments(cluster_labels, feat_stride=1.0, fps=30.0):
     # Build boundaries: start at 0, add all change points, end at T
     boundaries = [0] + change_indices.tolist() + [T]
     
-    # Convert boundaries to temporal segments
     for i in range(len(boundaries) - 1):
         start_idx = boundaries[i]
         end_idx = boundaries[i + 1]
         
-        # Convert indices to seconds
         start_time = start_idx * feat_stride
         end_time = end_idx * feat_stride
         
@@ -181,7 +170,6 @@ def temporal_nms(segments, scores=None, iou_threshold=0.3):
     if len(segments) == 0:
         return segments, scores if scores else []
     
-    # Convert to numpy for easier manipulation
     segments_array = np.array(segments)
     starts = segments_array[:, 0]
     ends = segments_array[:, 1]
@@ -209,8 +197,6 @@ def temporal_nms(segments, scores=None, iou_threshold=0.3):
                 else:
                     iou_matrix[i, j] = 0.0
     
-    # Greedy NMS: keep segments with highest score (or longest if no scores)
-    # Convert scores to list if it's a numpy array
     if scores is not None:
         if isinstance(scores, np.ndarray):
             scores = scores.tolist()
@@ -232,9 +218,7 @@ def temporal_nms(segments, scores=None, iou_threshold=0.3):
     
     keep.sort()  # Sort by index to maintain temporal order
     filtered_segments = [segments[i] for i in keep]
-    # Handle scores: check if it's not None and has elements
     if scores is not None and len(scores) > 0:
-        # Convert to list if it's a numpy array
         if isinstance(scores, np.ndarray):
             scores = scores.tolist()
         filtered_scores = [scores[i] for i in keep]
@@ -290,7 +274,6 @@ def postprocess_segments(segments, scores=None, min_duration=2.0, max_segments=5
         if filtered_scores:
             filtered_scores = [filtered_scores[i] for i in keep_indices]
     
-    # Ensure segments are sorted by start time
     sorted_indices = sorted(range(len(filtered)), key=lambda i: filtered[i][0])
     filtered = [filtered[i] for i in sorted_indices]
     if filtered_scores:
@@ -321,7 +304,6 @@ def localize_steps_clustering(video_id, features, config):
         segments: list of (start, end) tuples in seconds
         scores: list of confidence scores (optional, can be None)
     """
-    # Extract config parameters with defaults
     feat_stride = config.get('feat_stride', 1.0)
     fps = config.get('fps', 30.0)
     clustering_method = config.get('clustering_method', 'hierarchical')
@@ -363,10 +345,8 @@ def localize_steps_clustering(video_id, features, config):
         else:
             raise ValueError(f"Unknown clustering method: {clustering_method}")
         
-        # Convert cluster labels to segments
         segments = cluster_labels_to_segments(cluster_labels, feat_stride, fps)
         
-        # Postprocess segments
         segments, scores = postprocess_segments(
             segments, None, min_segment_duration, max_segments, nms_threshold
         )

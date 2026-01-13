@@ -69,7 +69,6 @@ def compare_with_ground_truth(pred_segments, gt_annotations):
         pred_segs = pred_segments[video_id]['segments']
         gt_steps = gt_annotations[video_id]['steps']
         
-        # Extract GT segments
         gt_segs = []
         for step in gt_steps:
             if step['start_time'] >= 0 and step['end_time'] >= 0:
@@ -187,21 +186,17 @@ def plot_statistics(stats, output_dir=None):
 
 def main(args):
     """Main validation function."""
-    # Load predicted segments
     print(f"Loading segments from {args.segments}")
     segments_dict = load_segments(args.segments)
     
-    # Load embeddings if provided
     embeddings_dict = None
     if args.embeddings:
         print(f"Loading embeddings from {args.embeddings}")
         embeddings_dict = load_embeddings(args.embeddings)
     
-    # Compute statistics
     print("\nComputing statistics...")
     stats = compute_segment_statistics(segments_dict)
     
-    # Compare with ground truth if available
     comparisons = None
     if args.compare_gt:
         print("\nLoading ground truth annotations...")
@@ -210,7 +205,6 @@ def main(args):
             print("Comparing with ground truth...")
             comparisons = compare_with_ground_truth(segments_dict, gt_annotations)
     
-    # Print statistics
     print_statistics(stats, comparisons)
     
     # Generate plots

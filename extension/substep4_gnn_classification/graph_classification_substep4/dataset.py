@@ -30,7 +30,6 @@ class TaskGraphDataset(Dataset):
         self.split = split
         self.root = Path(root)
         
-        # Load metadata
         metadata_file = self.root / 'metadata.json'
         if metadata_file.exists():
             with open(metadata_file, 'r') as f:
@@ -41,16 +40,9 @@ class TaskGraphDataset(Dataset):
         
         super().__init__(root, transform, pre_transform)
         
-        # Load graphs list based on split
         self.data_list = self.load_graphs()
         
     def load_graphs(self):
-        """
-        Carica la lista dei grafi per lo split specificato.
-        
-        Returns:
-            list di path ai file .pt
-        """
         data_list = []
         split_dir = self.root / self.split
         
@@ -58,11 +50,9 @@ class TaskGraphDataset(Dataset):
             print(f"Warning: {split_dir} does not exist")
             return data_list
         
-        # Load all .pt files in the split directory
         graph_files = list(split_dir.glob('*.pt'))
         
         for graph_file in sorted(graph_files):
-            # Verify it's in metadata if available
             video_id = graph_file.stem
             if self.metadata.get('graphs', {}).get(video_id, {}).get('split') == self.split:
                 data_list.append(str(graph_file))
@@ -89,7 +79,6 @@ class TaskGraphDataset(Dataset):
         graph_path = self.data_list[idx]
         data = torch.load(graph_path, weights_only=False)
         
-        # Apply transforms if any
         if self.transform is not None:
             data = self.transform(data)
         
@@ -116,16 +105,13 @@ def create_leave_one_out_datasets(root, test_recipe_id):
     with open(metadata_file, 'r') as f:
         metadata = json.load(f)
     
-    # Get all video IDs
     all_video_ids = list(metadata['graphs'].keys())
     
-    # Split based on recipe
     train_ids = [vid for vid in all_video_ids 
                  if not vid.startswith(f"{test_recipe_id}_")]
     test_ids = [vid for vid in all_video_ids 
                 if vid.startswith(f"{test_recipe_id}_")]
     
-    # Create temporary metadata for train/test
     train_metadata = metadata.copy()
     train_metadata['graphs'] = {vid: metadata['graphs'][vid] for vid in train_ids}
     for vid in train_ids:
@@ -136,7 +122,6 @@ def create_leave_one_out_datasets(root, test_recipe_id):
     for vid in test_ids:
         test_metadata['graphs'][vid]['split'] = 'test'
     
-    # Save temporary metadata
     train_metadata_file = root / 'metadata_train_temp.json'
     test_metadata_file = root / 'metadata_test_temp.json'
     
@@ -145,11 +130,9 @@ def create_leave_one_out_datasets(root, test_recipe_id):
     with open(test_metadata_file, 'w') as f:
         json.dump(test_metadata, f, indent=2)
     
-    # Create datasets (will use original split directories)
     train_dataset = TaskGraphDataset(root, split='train')
     test_dataset = TaskGraphDataset(root, split='test')
     
-    # Update metadata in datasets
     train_dataset.metadata = train_metadata
     test_dataset.metadata = test_metadata
     

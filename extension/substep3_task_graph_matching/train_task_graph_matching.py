@@ -25,14 +25,11 @@ from torch.utils.data import DataLoader, Dataset
 from torch.nn.utils.rnn import pad_sequence
 from tqdm import tqdm
 
-# Import del modello
 try:
     from extension.substep3_task_graph_matching.model.task_graph_matcher import TaskGraphMatcher, TextEncoder
 except ImportError:
     from model.task_graph_matcher import TaskGraphMatcher, TextEncoder
 
-
-# ==================== DATA LOADING ====================
 
 def load_recording_to_activity_mapping(csv_path):
     """
@@ -132,20 +129,16 @@ class TaskGraphMatchingDataset(Dataset):
             if len(steps) == 0:
                 continue
             
-            # Visual embeddings
             visual_emb = np.array([s['embedding'] for s in steps])
             
-            # Get activity_id
             activity_id = recording_to_activity.get(vid)
             if activity_id is None:
                 continue
             
-            # Get task graph
             tg_info = activity_to_taskgraph.get(activity_id)
             if tg_info is None:
                 continue
             
-            # Get text embeddings (cached or compute)
             if activity_id in self.precomputed_text_emb:
                 text_emb = self.precomputed_text_emb[activity_id]
             else:
@@ -198,8 +191,6 @@ def collate_fn(batch):
         'video_ids': video_ids
     }
 
-
-# ==================== TRAINING ====================
 
 def train_epoch(model, dataloader, optimizer, criterion, device):
     model.train()
@@ -255,7 +246,6 @@ def evaluate(model, dataloader, criterion, device):
             all_labels.extend(labels.cpu().numpy().flatten().tolist())
             all_costs.extend(matching_costs.cpu().numpy().tolist())
     
-    # Calcola metriche
     preds_binary = [1 if p > 0.5 else 0 for p in all_preds]
     
     tp = sum(1 for p, l in zip(preds_binary, all_labels) if p == 1 and l == 1)
@@ -278,26 +268,21 @@ def evaluate(model, dataloader, criterion, device):
     }
 
 
-# ==================== MAIN ====================
-
 def main(args):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(f"Using device: {device}")
     
     os.makedirs(args.ckpt_dir, exist_ok=True)
     
-    # Load data
     print("Loading data...")
     step_embeddings = np.load(args.npy, allow_pickle=True).item()
     annotation_map = load_step_annotations(args.annotations)
     recording_to_activity = load_recording_to_activity_mapping(args.recording_csv)
     activity_to_taskgraph = load_activity_to_taskgraph(args.activity_mapping)
     
-    # Initialize text encoder
     print("Initializing text encoder...")
     text_encoder = TextEncoder(args.text_model)
     
-    # Precompute all text embeddings
     print("Precomputing task graph embeddings...")
     precomputed_text_emb = {}
     for act_id, tg_info in activity_to_taskgraph.items():
@@ -305,7 +290,6 @@ def main(args):
         _, text_emb = text_encoder.encode_task_graph(task_graph)
         precomputed_text_emb[act_id] = text_emb
     
-    # Get all video IDs
     all_videos = list(step_embeddings.keys())
     recipes = sorted(list(set([v.split('_')[0] for v in all_videos])))
     
@@ -316,7 +300,6 @@ def main(args):
     n_errors = sum(1 for vid in all_videos if get_binary_label(vid, annotation_map) == 1.0)
     print(f"Label distribution: {n_errors} errors / {len(all_videos) - n_errors} normal")
     
-    # Leave-one-recipe-out cross-validation
     print(f"\n{'='*60}")
     print("Starting Leave-One-Recipe-Out Cross-Validation")
     print(f"{'='*60}")
@@ -335,7 +318,6 @@ def main(args):
         
         print(f"  Train: {len(train_ids)} videos, Test: {len(test_ids)} videos")
         
-        # Create datasets
         train_ds = TaskGraphMatchingDataset(
             step_embeddings, train_ids, annotation_map,
             recording_to_activity, activity_to_taskgraph,
@@ -365,7 +347,6 @@ def main(args):
         optimizer = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
         criterion = nn.BCELoss()
         
-        # Training loop
         best_f1 = 0
         best_epoch = 0
         
@@ -382,7 +363,6 @@ def main(args):
                     best_f1 = test_metrics['f1']
                     best_epoch = epoch + 1
                     
-                    # Save best checkpoint
                     ckpt_path = os.path.join(args.ckpt_dir, f"task_graph_matcher_recipe_{test_recipe}.pth")
                     torch.save({
                         'model_state_dict': model.state_dict(),
@@ -391,7 +371,6 @@ def main(args):
                         'test_recipe': test_recipe
                     }, ckpt_path)
         
-        # Final evaluation
         final_metrics = evaluate(model, test_loader, criterion, device)
         final_metrics['recipe'] = test_recipe
         final_metrics['best_epoch'] = best_epoch
@@ -400,7 +379,6 @@ def main(args):
         
         print(f"  Best F1: {best_f1:.3f} at epoch {best_epoch}")
     
-    # Summary
     print(f"\n{'='*60}")
     print("Cross-Validation Summary")
     print(f"{'='*60}")
@@ -415,7 +393,6 @@ def main(args):
     print(f"Average Precision: {avg_prec:.3f}")
     print(f"Average Recall: {avg_rec:.3f}")
     
-    # Save results
     results_path = os.path.join(args.ckpt_dir, "cv_results.json")
     with open(results_path, 'w') as f:
         json.dump({
@@ -466,7 +443,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     main(args)
-
-
-# Esempio di esecuzione:
-# python substep3_step_detection/train_task_graph_matching.py --npy extension_localization/data/step_embeddings.npy --annotations extension_localization/data/step_annotations.json --epochs 30

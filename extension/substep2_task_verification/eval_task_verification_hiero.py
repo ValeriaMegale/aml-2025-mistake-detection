@@ -1,8 +1,3 @@
-"""
-Evaluate Task Verification using HiERO step embeddings.
-Adapted from eval_task_verification.py to work with new embedding format.
-"""
-
 import argparse
 import json
 import os
@@ -18,26 +13,19 @@ except ImportError:
 
 
 def load_annotations(json_path):
-    """Load step annotations JSON."""
     with open(json_path, 'r') as f:
         return json.load(f)
 
 
 def get_recipe_level_label(video_id, annotation_map):
-    """
-    Get binary label for recipe-level correctness.
-    Returns 1.0 if video has ANY errors, 0.0 otherwise.
-    """
     if video_id not in annotation_map:
         return 0.0
     
     video_data = annotation_map[video_id]
     
-    # Check if video has errors flag
     if video_data.get('has_errors', False):
         return 1.0
     
-    # Check if any step has errors
     if 'steps' in video_data:
         for step in video_data['steps']:
             if step.get('has_errors', False):
@@ -47,19 +35,12 @@ def get_recipe_level_label(video_id, annotation_map):
 
 
 def convert_hiero_embeddings_to_dict_format(hiero_embeddings_dict):
-    """
-    Convert HiERO embedding format to expected format.
-    
-    HiERO format: {video_id: numpy_array [N, 768]}
-    Expected format: {video_id: [{'embedding': array}, {'embedding': array}, ...]}
-    """
     converted = {}
     for video_id, embeddings_array in hiero_embeddings_dict.items():
-        # embeddings_array is [N, 768]
         step_list = []
         for i in range(embeddings_array.shape[0]):
             step_list.append({
-                'embedding': embeddings_array[i]  # [768] array
+                'embedding': embeddings_array[i]
             })
         converted[video_id] = step_list
     return converted
@@ -73,13 +54,10 @@ class RecipeTaskDataset(Dataset):
                 continue
             
             steps = data_dict[vid]
-            # Extract embeddings from list of dicts
             embeddings = [s['embedding'] for s in steps]
             
             if len(embeddings) > 0:
-                # Convert to numpy array then tensor
                 seq = torch.tensor(np.array(embeddings), dtype=torch.float32)
-                # Get recipe-level binary label
                 lbl = get_recipe_level_label(vid, annotation_map)
                 self.samples.append((seq, torch.tensor([lbl], dtype=torch.float32)))
 
@@ -103,10 +81,8 @@ def run_evaluation(args):
     print(f"Using device: {device}")
 
     print(f"Loading HiERO embeddings from {args.npy}...")
-    # Load HiERO format: {video_id: numpy_array [N, 768]}
     hiero_embeddings = np.load(args.npy, allow_pickle=True).item()
     
-    # Convert to expected format
     print("Converting embedding format...")
     data_dict = convert_hiero_embeddings_to_dict_format(hiero_embeddings)
     
@@ -114,7 +90,6 @@ def run_evaluation(args):
     annotation_map = load_annotations(args.annotations)
 
     all_videos = list(data_dict.keys())
-    # Extract recipe names (e.g., "1_25" -> "1")
     recipes = sorted(list(set([v.split('_')[0] for v in all_videos if '_' in v])))
 
     accuracies = []
@@ -129,7 +104,6 @@ def run_evaluation(args):
     for fold_idx, test_recipe in enumerate(recipes):
         print(f"\n--- FOLD {fold_idx+1}/{len(recipes)}: Recipe {test_recipe} ---")
         
-        # Test set = ONLY videos from current recipe
         test_ids = [v for v in all_videos if v.startswith(f"{test_recipe}_")]
 
         test_ds = RecipeTaskDataset(data_dict, test_ids, annotation_map)
@@ -144,7 +118,6 @@ def run_evaluation(args):
             collate_fn=collate_fn
         )
 
-        # Load model checkpoint for this fold
         ckpt_path = os.path.join(args.ckpt_dir, f"model_holdout_{test_recipe}.pth")
 
         if not os.path.exists(ckpt_path):
@@ -152,7 +125,6 @@ def run_evaluation(args):
             print(f"  Skipping recipe {test_recipe}")
             continue
 
-        # Initialize and load model
         model = TaskVerifier(input_dim=768).to(device)
         model.load_state_dict(torch.load(ckpt_path, map_location=device))
         model.eval()
@@ -193,7 +165,6 @@ def run_evaluation(args):
         print(f"Min Accuracy: {np.min(accuracies):.4f}")
         print(f"Max Accuracy: {np.max(accuracies):.4f}")
         
-        # Compute overall metrics
         all_predictions = np.array(all_predictions)
         all_labels = np.array(all_labels)
         binary_preds = (all_predictions > 0.5).astype(float)

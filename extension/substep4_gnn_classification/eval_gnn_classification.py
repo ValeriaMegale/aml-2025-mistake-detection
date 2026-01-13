@@ -1,9 +1,3 @@
-"""
-Evaluate GNN Classification for Task Verification (Substep 4).
-
-Valuta tutti i checkpoints leave-one-out e genera metriche aggregate.
-"""
-
 import argparse
 import json
 import csv
@@ -14,7 +8,6 @@ import torch.nn as nn
 from torch_geometric.loader import DataLoader
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 
-# Add current directory to path
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -24,7 +17,6 @@ from extension.substep4_gnn_classification.graph_classification_substep4.model i
 
 
 def evaluate_model(model, dataloader, criterion, device):
-    """Evaluation con metriche complete."""
     model.eval()
     total_loss = 0
     n_batches = 0
@@ -40,12 +32,10 @@ def evaluate_model(model, dataloader, criterion, device):
             
             out = model(batch.x, batch.edge_index, batch.batch)
             
-            # Reshape output: [batch, 1] -> [batch] for BCEWithLogitsLoss
             out = out.squeeze(-1) if out.dim() > 1 else out
             
             loss = criterion(out, batch.y.float())
             
-            # Get probabilities (out is already [batch] shape after squeeze)
             probs = torch.sigmoid(out)
             preds = (probs > 0.5).long()
             
@@ -53,19 +43,16 @@ def evaluate_model(model, dataloader, criterion, device):
             all_labels.extend(batch.y.cpu().numpy().tolist())
             all_probs.extend(probs.cpu().numpy().tolist())
             
-            # Collect video IDs if available
             if hasattr(batch, 'video_id'):
                 all_video_ids.extend(batch.video_id)
             
             total_loss += loss.item()
             n_batches += 1
     
-    # Convert to numpy
     all_preds = np.array(all_preds)
     all_labels = np.array(all_labels)
     all_probs = np.array(all_probs)
     
-    # Compute metrics
     accuracy = accuracy_score(all_labels, all_preds)
     precision = precision_score(all_labels, all_preds, zero_division=0)
     recall = recall_score(all_labels, all_preds, zero_division=0)
@@ -93,7 +80,6 @@ def evaluate_model(model, dataloader, criterion, device):
 
 
 def get_available_checkpoints(ckpt_dir):
-    """Trova tutti i checkpoints disponibili."""
     ckpt_path = Path(ckpt_dir)
     if not ckpt_path.exists():
         return []
@@ -121,7 +107,6 @@ def evaluate_all_checkpoints(args):
     
     print(f"\nFound {len(available_ckpts)} checkpoints")
     
-    # Load metadata
     metadata_file = Path(args.data_dir) / 'metadata.json'
     with open(metadata_file, 'r') as f:
         metadata = json.load(f)
@@ -131,7 +116,6 @@ def evaluate_all_checkpoints(args):
     
     print(f"Total recipes: {len(all_recipes)}")
     
-    # Evaluation results
     all_results = []
     all_metrics = []
     
@@ -142,16 +126,13 @@ def evaluate_all_checkpoints(args):
         print(f"Evaluating Recipe {recipe_id}")
         print(f"{'='*70}")
         
-        # Load checkpoint
         checkpoint = torch.load(ckpt_path, map_location=device, weights_only=False)
         
-        # Get model configuration
-        in_channels = checkpoint.get('in_channels', 1280)  # Default: text(512) + visual(768)
+        in_channels = checkpoint.get('in_channels', 1280)
         hidden_channels = args.hidden_channels
         if 'args' in checkpoint:
             hidden_channels = checkpoint['args'].get('hidden_channels', hidden_channels)
         
-        # Get test video IDs
         all_video_ids = list(metadata['graphs'].keys())
         test_video_ids = [vid for vid in all_video_ids 
                           if vid.startswith(f"{recipe_id}_")]
@@ -160,7 +141,6 @@ def evaluate_all_checkpoints(args):
             print(f"No test videos for recipe {recipe_id}, skipping...")
             continue
         
-        # Load test graphs
         test_graphs = []
         for vid in test_video_ids:
             graph_file = Path(args.data_dir) / 'test' / f"{vid}.pt"
@@ -175,7 +155,6 @@ def evaluate_all_checkpoints(args):
         
         test_loader = DataLoader(test_graphs, batch_size=args.batch_size, shuffle=False)
         
-        # Initialize model
         model = DAGNNClassifier(
             in_channels=in_channels,
             hidden_channels=hidden_channels,
@@ -184,15 +163,12 @@ def evaluate_all_checkpoints(args):
             dropout=args.dropout
         ).to(device)
         
-        # Load weights
         model.load_state_dict(checkpoint['model_state_dict'])
         print(f"  Loaded checkpoint from epoch {checkpoint.get('epoch', 'unknown')}")
         print(f"  Test samples: {len(test_graphs)}")
         
-        # Evaluate
         metrics, predictions = evaluate_model(model, test_loader, criterion, device)
         
-        # Store results
         result = {
             'recipe_id': recipe_id,
             'checkpoint': ckpt_path,
@@ -272,11 +248,9 @@ def evaluate_all_checkpoints(args):
         if aucs:
             print(f"AUC:       {aggregate['auc']['mean']:.4f} ± {aggregate['auc']['std']:.4f}")
     
-    # Save results
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     
-    # Save detailed results
     results_file = output_dir / 'all_recipes_results.json'
     with open(results_file, 'w') as f:
         json.dump({
@@ -286,7 +260,6 @@ def evaluate_all_checkpoints(args):
     
     print(f"\nResults saved to {results_file}")
     
-    # Save summary CSV
     if all_results:
         csv_file = output_dir / 'results_summary.csv'
         with open(csv_file, 'w', newline='') as f:

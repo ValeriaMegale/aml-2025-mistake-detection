@@ -25,7 +25,6 @@ sample = train_dataset.get(0)
 model = DAGNNClassifier(sample.num_node_features, hidden_channels, num_classes)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-# Training
 for epoch in range(1, epochs+1):
     loss = train(model, train_loader, optimizer)
     acc = test(model, test_loader)

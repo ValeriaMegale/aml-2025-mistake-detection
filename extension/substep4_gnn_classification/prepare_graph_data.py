@@ -67,7 +67,6 @@ def compute_matching(visual_emb, text_emb):
             - node_to_visual: {node_idx: visual_idx} mapping
             - match_scores: {node_idx: similarity_score} per nodi matched
     """
-    # Ensure numpy arrays
     if isinstance(visual_emb, torch.Tensor):
         visual_emb = visual_emb.numpy()
     if isinstance(text_emb, torch.Tensor):
@@ -93,14 +92,11 @@ def compute_matching(visual_emb, text_emb):
     vis_norm = F.normalize(torch.tensor(visual_emb, dtype=torch.float32), p=2, dim=-1)
     txt_norm = F.normalize(torch.tensor(text_emb, dtype=torch.float32), p=2, dim=-1)
     
-    # Calcola similarity matrix
-    similarity = torch.matmul(vis_norm, txt_norm.t()).numpy()  # [N_steps, N_nodes]
+    similarity = torch.matmul(vis_norm, txt_norm.t()).numpy()
     
-    # Hungarian matching (minimizza costo = massimizza similarity)
     cost_matrix = -similarity
     row_ind, col_ind = linear_sum_assignment(cost_matrix)
     
-    # Build mappings
     visual_to_node = {}
     node_to_visual = {}
     match_scores = {}
@@ -213,7 +209,6 @@ def create_graph_data(video_id, step_embeddings, task_graph, text_emb, text_enco
     Returns:
         data: torch_geometric.data.Data object
     """
-    # Convert step embeddings to numpy array
     if isinstance(step_embeddings, list):
         visual_emb = np.array([s['embedding'] if isinstance(s, dict) else s 
                               for s in step_embeddings], dtype=np.float32)
@@ -223,25 +218,19 @@ def create_graph_data(video_id, step_embeddings, task_graph, text_emb, text_enco
     if len(visual_emb) == 0:
         return None
     
-    # Compute matching
     matching = compute_matching(visual_emb, text_emb)
     
-    # Create node features
     node_features = create_node_features(
         task_graph, text_emb, visual_emb, matching, feature_dim=feature_dim
     )
     
-    # Convert to tensor
     x = torch.tensor(node_features, dtype=torch.float32)
     
-    # Get edge_index from task graph (con validazione)
     edge_index = task_graph_to_edge_index(task_graph, num_nodes=x.size(0))
     
-    # Get label
     label = int(get_binary_label(video_id, annotation_map))
     y = torch.tensor([label], dtype=torch.long)
     
-    # Create Data object
     data = Data(
         x=x,
         edge_index=edge_index,
@@ -258,22 +247,17 @@ def prepare_all_graphs(args):
     
     print("Loading data...")
     
-    # Load step embeddings
     step_embeddings_dict = np.load(args.step_embeddings_npy, allow_pickle=True).item()
     print(f"Loaded step embeddings for {len(step_embeddings_dict)} videos")
     
-    # Load annotations
     annotation_map = load_step_annotations(args.annotations)
     
-    # Load mappings
     recording_to_activity = load_recording_to_activity_mapping(args.recording_csv)
     activity_to_taskgraph = load_activity_to_taskgraph(args.activity_mapping)
     
-    # Initialize text encoder
     print("Initializing text encoder...")
     text_encoder = TextEncoder(args.text_model)
     
-    # Precompute text embeddings for all task graphs
     print("Precomputing task graph text embeddings...")
     precomputed_text_emb = {}
     for act_id, tg_info in activity_to_taskgraph.items():
@@ -282,10 +266,8 @@ def prepare_all_graphs(args):
         precomputed_text_emb[act_id] = text_emb
         print(f"  Activity {act_id}: {len(text_emb)} nodes")
     
-    # Get all videos
     all_video_ids = list(step_embeddings_dict.keys())
     
-    # Extract recipes for leave-one-out split
     recipes = sorted(list(set([
         v.split('_')[0] for v in all_video_ids if '_' in v
     ])), key=lambda x: int(x) if x.isdigit() else 0)
@@ -293,14 +275,12 @@ def prepare_all_graphs(args):
     print(f"\nFound {len(recipes)} recipes")
     print(f"Total videos: {len(all_video_ids)}")
     
-    # Create output directories
     output_dir = Path(args.output_dir)
     train_dir = output_dir / 'train'
     test_dir = output_dir / 'test'
     train_dir.mkdir(parents=True, exist_ok=True)
     test_dir.mkdir(parents=True, exist_ok=True)
     
-    # Metadata
     metadata = {
         'recipes': recipes,
         'total_videos': len(all_video_ids),
@@ -315,7 +295,6 @@ def prepare_all_graphs(args):
         
         step_embeddings = step_embeddings_dict[video_id]
         
-        # Get activity/task graph
         activity_id = recording_to_activity.get(video_id)
         if activity_id is None:
             continue
@@ -327,7 +306,6 @@ def prepare_all_graphs(args):
         task_graph = load_task_graph(args.task_graph_dir, tg_info['task_graph_file'])
         text_emb = precomputed_text_emb[activity_id]
         
-        # Create graph data
         data = create_graph_data(
             video_id, step_embeddings, task_graph, text_emb, text_encoder,
             annotation_map, feature_dim=args.feature_dim
@@ -336,10 +314,8 @@ def prepare_all_graphs(args):
         if data is None:
             continue
         
-        # Determine split (leave-one-out: recipe k in test, others in train)
         recipe_id = video_id.split('_')[0]
         
-        # Save graph
         graph_filename = f"{video_id}.pt"
         if recipe_id in args.test_recipes.split(','):
             save_path = test_dir / graph_filename
@@ -350,7 +326,6 @@ def prepare_all_graphs(args):
         
         torch.save(data, save_path)
         
-        # Update metadata
         metadata['graphs'][video_id] = {
             'file': graph_filename,
             'split': split,
@@ -361,7 +336,6 @@ def prepare_all_graphs(args):
             'label': int(data.y.item())
         }
     
-    # Save metadata
     metadata_file = output_dir / 'metadata.json'
     with open(metadata_file, 'w') as f:
         json.dump(metadata, f, indent=2)
@@ -371,7 +345,6 @@ def prepare_all_graphs(args):
     print(f"  Test graphs: {len(list(test_dir.glob('*.pt')))}")
     print(f"  Metadata saved to {metadata_file}")
     
-    # Statistics
     train_labels = [g['label'] for g in metadata['graphs'].values() if g['split'] == 'train']
     test_labels = [g['label'] for g in metadata['graphs'].values() if g['split'] == 'test']
     

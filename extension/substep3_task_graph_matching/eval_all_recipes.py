@@ -1,11 +1,3 @@
-"""
-Evaluate Task Graph Matching for all recipes (batch evaluation).
-
-Extension "From Mistake Detection to Task Verification" - Substep 3
-
-Questo script valuta tutti i checkpoints disponibili e genera metriche aggregate.
-"""
-
 import argparse
 import json
 import os
@@ -54,33 +46,25 @@ def evaluate_all_recipes(args):
     for recipe_id, ckpt_path in available_ckpts:
         print(f"  Recipe {recipe_id}: {Path(ckpt_path).name}")
     
-    # Load shared data
     print("\nLoading shared data...")
     step_embeddings_raw = np.load(args.npy, allow_pickle=True).item()
     annotation_map = load_step_annotations(args.annotations)
     recording_to_activity = load_recording_to_activity_mapping(args.recording_csv)
     
-    # Convert HiERO format to expected format if needed
-    # HiERO format: {video_id: numpy_array [N, 768]}
-    # Expected format: {video_id: [{'embedding': array}, ...]}
     step_embeddings = {}
     for video_id, embeddings_array in step_embeddings_raw.items():
         if isinstance(embeddings_array, np.ndarray):
-            # Convert numpy array to list of dicts
             step_embeddings[video_id] = [
                 {'embedding': embeddings_array[i]} 
                 for i in range(embeddings_array.shape[0])
             ]
         else:
-            # Already in expected format
             step_embeddings[video_id] = embeddings_array
     activity_to_taskgraph = load_activity_to_taskgraph(args.activity_mapping)
     
-    # Initialize text encoder
     print("Initializing text encoder...")
     text_encoder = TextEncoder(args.text_model)
     
-    # Precompute text embeddings
     print("Precomputing task graph embeddings...")
     precomputed_text_emb = {}
     for act_id, tg_info in activity_to_taskgraph.items():
@@ -88,17 +72,14 @@ def evaluate_all_recipes(args):
         _, text_emb = text_encoder.encode_task_graph(task_graph)
         precomputed_text_emb[act_id] = text_emb
     
-    # Get all video IDs
     all_videos = list(step_embeddings.keys())
     
-    # Collect all recipes from activity mapping
     all_recipe_ids = sorted([r for r in activity_to_taskgraph.keys()], 
                           key=lambda x: int(x) if x.isdigit() else 0)
     
     print(f"\nTotal recipes in dataset: {len(all_recipe_ids)}")
     print(f"Checkpoints available: {len(available_ckpts)}")
     
-    # Evaluate each checkpoint
     all_results = []
     all_metrics = []
     
@@ -107,14 +88,12 @@ def evaluate_all_recipes(args):
         print(f"Evaluating Recipe {recipe_id}")
         print(f"{'='*70}")
         
-        # Get test video IDs for this recipe
         test_ids = [v for v in all_videos if v.startswith(f"{recipe_id}_")]
         
         if not test_ids:
             print(f"  No videos found for recipe {recipe_id}, skipping...")
             continue
         
-        # Create test dataset
         test_ds = TaskGraphMatchingDataset(
             step_embeddings, test_ids, annotation_map,
             recording_to_activity, activity_to_taskgraph,
@@ -130,15 +109,12 @@ def evaluate_all_recipes(args):
             collate_fn=collate_fn
         )
         
-        # Load checkpoint first to infer dimensions
         checkpoint = torch.load(ckpt_path, map_location=device, weights_only=False)
         
-        # Infer visual_dim from checkpoint if args not saved
         visual_dim = args.visual_dim
         if 'args' in checkpoint and 'visual_dim' in checkpoint['args']:
             visual_dim = checkpoint['args']['visual_dim']
         else:
-            # Infer from model weights
             if 'model_state_dict' in checkpoint:
                 weight_shape = checkpoint['model_state_dict']['visual_proj.0.weight'].shape
                 visual_dim = weight_shape[1]  # [hidden_dim, visual_dim]
@@ -148,7 +124,6 @@ def evaluate_all_recipes(args):
         
         print(f"  Using visual_dim={visual_dim} (inferred from checkpoint)")
         
-        # Load model with inferred dimensions
         model = TaskGraphMatcher(
             visual_dim=visual_dim,
             text_dim=text_encoder.dim,
@@ -163,8 +138,6 @@ def evaluate_all_recipes(args):
             model.load_state_dict(checkpoint)
             epoch_info = 'unknown'
         
-        # Adapt embeddings if dimension mismatch
-        # Check first sample to see if we need to adapt
         sample_batch = next(iter(test_loader))
         actual_vis_dim = sample_batch['visual_emb'].shape[-1]
         
@@ -174,7 +147,6 @@ def evaluate_all_recipes(args):
             print(f"    Actual embeddings: {actual_vis_dim}D")
             print(f"    Applying zero-padding to adapt...")
             
-            # Create adapter function
             def adapt_batch(batch):
                 vis_emb = batch['visual_emb']
                 if vis_emb.shape[-1] < visual_dim:
@@ -188,7 +160,6 @@ def evaluate_all_recipes(args):
                     batch['visual_emb'] = vis_emb[..., :visual_dim]
                 return batch
             
-            # Create adapted loader
             class AdaptedLoader:
                 def __init__(self, original_loader):
                     self.original_loader = original_loader
@@ -200,10 +171,8 @@ def evaluate_all_recipes(args):
             
             test_loader = AdaptedLoader(test_loader)
         
-        # Evaluate
         metrics, predictions = evaluate_model(model, test_loader, device, threshold=args.threshold)
         
-        # Store results
         result = {
             'recipe_id': recipe_id,
             'checkpoint': ckpt_path,
@@ -283,11 +252,9 @@ def evaluate_all_recipes(args):
         if aucs:
             print(f"AUC:       {aggregate['auc']['mean']:.4f} ± {aggregate['auc']['std']:.4f}")
     
-    # Save results
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     
-    # Save detailed results
     results_file = output_dir / 'all_recipes_results.json'
     with open(results_file, 'w') as f:
         json.dump({
@@ -297,7 +264,6 @@ def evaluate_all_recipes(args):
     
     print(f"\nResults saved to {results_file}")
     
-    # Save summary CSV
     if all_results:
         import csv
         csv_file = output_dir / 'results_summary.csv'

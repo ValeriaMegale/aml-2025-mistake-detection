@@ -32,26 +32,43 @@ def train_epoch(model, train_loader, optimizer, criterion, device):
     total_loss = 0
     n_batches = 0
     
+    all_preds = []
+    all_labels = []
+    
     for batch in train_loader:
         batch = batch.to(device)
         
         optimizer.zero_grad()
         out = model(batch.x, batch.edge_index, batch.batch)
         
-        # Reshape output: [batch, 1] -> [batch] for BCEWithLogitsLoss
         out = out.squeeze(-1) if out.dim() > 1 else out
         
-        # BCEWithLogitsLoss expects float targets
         loss = criterion(out, batch.y.float())
         
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
         optimizer.step()
         
+        # Track predictions for debugging
+        with torch.no_grad():
+            probs = torch.sigmoid(out)
+            preds = (probs > 0.5).long()
+            all_preds.extend(preds.cpu().numpy().tolist())
+            all_labels.extend(batch.y.cpu().numpy().tolist())
+        
         total_loss += loss.item()
         n_batches += 1
     
-    return total_loss / max(n_batches, 1)
+    # Log training stats
+    if n_batches > 0:
+        all_preds = np.array(all_preds)
+        all_labels = np.array(all_labels)
+        train_acc = accuracy_score(all_labels, all_preds)
+        train_pos_rate = np.mean(all_preds)
+        label_pos_rate = np.mean(all_labels)
+        return total_loss / max(n_batches, 1), train_acc, train_pos_rate, label_pos_rate
+    
+    return total_loss / max(n_batches, 1), 0.0, 0.0, 0.0
 
 
 def evaluate(model, dataloader, criterion, device):
@@ -70,14 +87,11 @@ def evaluate(model, dataloader, criterion, device):
             
             out = model(batch.x, batch.edge_index, batch.batch)
             
-            # Reshape output: [batch, 1] -> [batch] for BCEWithLogitsLoss
             out = out.squeeze(-1) if out.dim() > 1 else out
             
             # BCEWithLogitsLoss
             loss = criterion(out, batch.y.float())
             
-            # Get probabilities
-            # Output is already [batch] shape after squeeze in forward
             probs = torch.sigmoid(out)
             preds = (probs > 0.5).long()
             
@@ -88,7 +102,6 @@ def evaluate(model, dataloader, criterion, device):
             total_loss += loss.item()
             n_batches += 1
     
-    # Convert to numpy
     all_preds = np.array(all_preds)
     all_labels = np.array(all_labels)
     all_probs = np.array(all_probs)
@@ -111,7 +124,8 @@ def evaluate(model, dataloader, criterion, device):
         'precision': precision,
         'recall': recall,
         'f1': f1,
-        'auc': auc
+        'auc': auc,
+        'predictions': all_preds.tolist()  # Add predictions for debugging
     }
 
 
@@ -123,14 +137,12 @@ def train_one_fold(args, test_recipe_id, all_recipes):
     print(f"Training for Recipe {test_recipe_id} (test set)")
     print(f"{'='*70}")
     
-    # Load metadata to get all video IDs
     metadata_file = Path(args.data_dir) / 'metadata.json'
     with open(metadata_file, 'r') as f:
         metadata = json.load(f)
     
     all_video_ids = list(metadata['graphs'].keys())
     
-    # Split: test = recipe test_recipe_id, train = all others
     train_video_ids = [vid for vid in all_video_ids 
                        if not vid.startswith(f"{test_recipe_id}_")]
     test_video_ids = [vid for vid in all_video_ids 
@@ -143,14 +155,10 @@ def train_one_fold(args, test_recipe_id, all_recipes):
     print(f"Train videos: {len(train_video_ids)}")
     print(f"Test videos: {len(test_video_ids)}")
     
-    # Load datasets
-    # We need to manually create the splits
     train_graphs = []
     test_graphs = []
     
-    # Load all graphs and split
     for vid in train_video_ids:
-        # Try train dir first, then test dir
         graph_file = Path(args.data_dir) / 'train' / f"{vid}.pt"
         if not graph_file.exists():
             graph_file = Path(args.data_dir) / 'test' / f"{vid}.pt"
@@ -168,17 +176,14 @@ def train_one_fold(args, test_recipe_id, all_recipes):
         print(f"Insufficient data, skipping...")
         return None
     
-    # Create data loaders
     train_loader = DataLoader(train_graphs, batch_size=args.batch_size, shuffle=True)
     test_loader = DataLoader(test_graphs, batch_size=args.batch_size, shuffle=False)
     
-    # Get input dimension from first sample
     sample = train_graphs[0]
     in_channels = sample.x.size(1)
     
     print(f"Node feature dimension: {in_channels}")
     
-    # Initialize model
     model = DAGNNClassifier(
         in_channels=in_channels,
         hidden_channels=args.hidden_channels,
@@ -190,10 +195,30 @@ def train_one_fold(args, test_recipe_id, all_recipes):
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
     
-    # Binary classification: BCEWithLogitsLoss
-    criterion = nn.BCEWithLogitsLoss()
+    train_labels = []
+    for g in train_graphs:
+        if hasattr(g, 'y'):
+            if isinstance(g.y, torch.Tensor):
+                train_labels.append(g.y.item())
+            else:
+                train_labels.append(int(g.y))
+        else:
+            train_labels.append(0)
     
-    # Training loop
+    num_class_0 = sum(1 for l in train_labels if l == 0)
+    num_class_1 = sum(1 for l in train_labels if l == 1)
+    total = len(train_labels)
+    
+    if num_class_0 > 0 and num_class_1 > 0:
+        # pos_weight = num_neg / num_pos for BCEWithLogitsLoss
+        pos_weight = torch.tensor([num_class_0 / num_class_1], device=device)
+        print(f"Class distribution - Class 0: {num_class_0} ({num_class_0/total*100:.1f}%), Class 1: {num_class_1} ({num_class_1/total*100:.1f}%)")
+        print(f"Using pos_weight: {pos_weight.item():.3f}")
+        criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+    else:
+        print("Warning: Cannot compute class weights, using standard BCEWithLogitsLoss")
+        criterion = nn.BCEWithLogitsLoss()
+    
     best_f1 = 0
     best_epoch = 0
     patience_counter = 0
@@ -201,25 +226,33 @@ def train_one_fold(args, test_recipe_id, all_recipes):
     start_time = time.time()
     
     for epoch in range(args.epochs):
-        train_loss = train_epoch(model, train_loader, optimizer, criterion, device)
+        train_result = train_epoch(model, train_loader, optimizer, criterion, device)
+        if isinstance(train_result, tuple):
+            train_loss, train_acc, train_pos_rate, label_pos_rate = train_result
+        else:
+            train_loss = train_result
+            train_acc, train_pos_rate, label_pos_rate = 0.0, 0.0, 0.0
+        
         scheduler.step()
         
         if (epoch + 1) % args.eval_every == 0 or epoch == args.epochs - 1:
             test_metrics = evaluate(model, test_loader, criterion, device)
             
             elapsed = time.time() - start_time
+            test_pred_pos_rate = np.mean(test_metrics['predictions']) if 'predictions' in test_metrics else 0.0
             print(f"  Epoch {epoch+1}/{args.epochs} [{elapsed:.1f}s]: "
-                  f"Train Loss={train_loss:.4f}, "
+                  f"Train Loss={train_loss:.4f}, Train Acc={train_acc:.3f}, "
+                  f"Train Pred Pos={train_pos_rate:.3f}, Label Pos={label_pos_rate:.3f}, "
                   f"Test Acc={test_metrics['accuracy']:.3f}, "
                   f"F1={test_metrics['f1']:.3f}, "
-                  f"AUC={test_metrics['auc']:.3f}")
+                  f"AUC={test_metrics['auc']:.3f}, "
+                  f"Test Pred Pos={test_pred_pos_rate:.3f}")
             
             if test_metrics['f1'] > best_f1:
                 best_f1 = test_metrics['f1']
                 best_epoch = epoch + 1
                 patience_counter = 0
                 
-                # Save checkpoint
                 ckpt_dir = Path(args.ckpt_dir)
                 ckpt_dir.mkdir(parents=True, exist_ok=True)
                 ckpt_path = ckpt_dir / f"gnn_classifier_recipe_{test_recipe_id}.pth"
@@ -257,7 +290,6 @@ def main(args):
     print(f"Data directory: {args.data_dir}")
     print(f"Checkpoint directory: {args.ckpt_dir}")
     
-    # Load metadata to get all recipes
     metadata_file = Path(args.data_dir) / 'metadata.json'
     with open(metadata_file, 'r') as f:
         metadata = json.load(f)
@@ -267,7 +299,6 @@ def main(args):
     
     print(f"\nTotal recipes: {len(all_recipes)}")
     
-    # Train for each recipe (leave-one-out)
     all_results = []
     
     for recipe_id in all_recipes:
@@ -286,7 +317,6 @@ def main(args):
         print(f"Mean F1: {np.mean(f1s):.4f} ± {np.std(f1s):.4f}")
         print(f"Min F1: {np.min(f1s):.4f}, Max F1: {np.max(f1s):.4f}")
         
-        # Save summary
         summary_file = Path(args.ckpt_dir) / 'training_summary.json'
         with open(summary_file, 'w') as f:
             json.dump({
@@ -325,8 +355,8 @@ if __name__ == "__main__":
                         help='Weight decay')
     parser.add_argument('--hidden_channels', type=int, default=128,
                         help='Hidden dimension')
-    parser.add_argument('--K', type=int, default=10,
-                        help='DAGNN propagation steps')
+    parser.add_argument('--K', type=int, default=3,
+                        help='DAGNN propagation steps (reduced from 10 to prevent variance collapse)')
     parser.add_argument('--dropout', type=float, default=0.3,
                         help='Dropout rate')
     

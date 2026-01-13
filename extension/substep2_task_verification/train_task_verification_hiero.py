@@ -1,8 +1,3 @@
-"""
-Train Task Verification using HiERO step embeddings.
-Adapted from train_task_verification.py to work with new embedding format.
-"""
-
 import argparse
 import json
 import os
@@ -35,11 +30,9 @@ def get_recipe_level_label(video_id, annotation_map):
     
     video_data = annotation_map[video_id]
     
-    # Check if video has errors flag
     if video_data.get('has_errors', False):
         return 1.0
     
-    # Check if any step has errors
     if 'steps' in video_data:
         for step in video_data['steps']:
             if step.get('has_errors', False):
@@ -75,13 +68,10 @@ class RecipeTaskDataset(Dataset):
                 continue
             
             steps = data_dict[vid]
-            # Extract embeddings from list of dicts
             embeddings = [s['embedding'] for s in steps]
             
             if len(embeddings) > 0:
-                # Convert to numpy array then tensor
                 seq = torch.tensor(np.array(embeddings), dtype=torch.float32)
-                # Get recipe-level binary label
                 lbl = get_recipe_level_label(vid, annotation_map)
                 self.samples.append((seq, torch.tensor([lbl], dtype=torch.float32)))
 
@@ -104,14 +94,11 @@ def run_training(args):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(f"Using device: {device}")
 
-    # Create checkpoint directory
     os.makedirs(args.ckpt_dir, exist_ok=True)
 
     print(f"Loading HiERO embeddings from {args.npy}...")
-    # Load HiERO format: {video_id: numpy_array [N, 768]}
     hiero_embeddings = np.load(args.npy, allow_pickle=True).item()
     
-    # Convert to expected format
     print("Converting embedding format...")
     data_dict = convert_hiero_embeddings_to_dict_format(hiero_embeddings)
     
@@ -119,7 +106,6 @@ def run_training(args):
     annotation_map = load_annotations(args.annotations)
 
     all_videos = list(data_dict.keys())
-    # Extract recipe names (e.g., "1_25" -> "1")
     recipes = sorted(list(set([v.split('_')[0] for v in all_videos if '_' in v])))
 
     print(f"Found {len(recipes)} recipes for Leave-One-Out evaluation")
@@ -130,7 +116,6 @@ def run_training(args):
         print(f"FOLD {fold_idx+1}/{len(recipes)}: Holding out Recipe {test_recipe}")
         print(f"{'='*60}")
 
-        # Training set = All videos EXCEPT those from current recipe
         train_ids = [v for v in all_videos if not v.startswith(f"{test_recipe}_")]
 
         if len(train_ids) == 0:
@@ -148,12 +133,10 @@ def run_training(args):
         print(f"  Training videos: {len(train_ids)}")
         print(f"  Training batches: {len(train_loader)}")
 
-        # Initialize Model (input_dim=768 for perception)
         model = TaskVerifier(input_dim=768).to(device)
         criterion = nn.BCELoss()
         optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
-        # Training Loop
         model.train()
         for epoch in range(args.epochs):
             epoch_loss = 0
@@ -175,7 +158,6 @@ def run_training(args):
             if (epoch + 1) % 5 == 0 or (epoch + 1) == args.epochs:
                 print(f"  Epoch {epoch+1}/{args.epochs} - Avg Loss: {avg_loss:.4f}")
 
-        # Save checkpoint
         ckpt_name = f"model_holdout_{test_recipe}.pth"
         ckpt_path = os.path.join(args.ckpt_dir, ckpt_name)
         torch.save(model.state_dict(), ckpt_path)

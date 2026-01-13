@@ -35,7 +35,6 @@ def eval_er(config, threshold):
     model = fetch_model(config)
     criterion = torch.nn.BCEWithLogitsLoss()
 
-    # Load the model from the ckpt file
     model.load_state_dict(torch.load(config.ckpt_directory))
     model.eval()
 

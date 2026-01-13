@@ -46,15 +46,13 @@ except Exception as e:
 # Test model forward pass
 print("\nTesting model forward pass...")
 try:
-    # Create dummy graph data
     num_nodes = 10
     num_edges = 15
     
-    x = torch.randn(num_nodes, in_channels)  # Node features
-    edge_index = torch.randint(0, num_nodes, (2, num_edges))  # Random edges
-    batch = torch.zeros(num_nodes, dtype=torch.long)  # Single graph
+    x = torch.randn(num_nodes, in_channels)
+    edge_index = torch.randint(0, num_nodes, (2, num_edges))
+    batch = torch.zeros(num_nodes, dtype=torch.long)
     
-    # Forward pass
     out = model(x, edge_index, batch)
     
     assert out.shape == (1, 2), f"Expected output shape (1, 2), got {out.shape}"
@@ -115,7 +113,6 @@ if data_dir.exists() and (data_dir / "metadata.json").exists():
             # Test model with real data
             model.eval()
             with torch.no_grad():
-                # Create batch with single graph
                 batch = sample
                 batch.batch = torch.zeros(batch.num_nodes, dtype=torch.long)
                 out = model(batch.x, batch.edge_index, batch.batch)

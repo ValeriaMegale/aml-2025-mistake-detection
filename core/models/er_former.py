@@ -11,11 +11,9 @@ class ErFormer(nn.Module):
         self.config = config
         input_dimension = fetch_input_dim(config)
 
-        # Initialize the transformer encoder
         step_encoder_layer = EncoderLayer(d_model=input_dimension, dim_feedforward=2048, nhead=8, batch_first=True)
         self.step_encoder = Encoder(step_encoder_layer, num_layers=1)
         decoder_input_dimension = fetch_input_dim(config, decoder=True)
-        # Initialize the MLP decoder
         self.decoder = MLP(decoder_input_dimension, 512, 1)
         # self.apply(init_weights)  # Apply weight initialization
 

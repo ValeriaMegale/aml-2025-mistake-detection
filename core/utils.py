@@ -7,7 +7,6 @@ from constants import Constants as const
 
 
 def init_logger_and_wandb(config):
-    # Create a descriptive run name with key parameters
     run_name = f"{config.variant}_{config.backbone}_{config.split}"
     
     # Add modality info

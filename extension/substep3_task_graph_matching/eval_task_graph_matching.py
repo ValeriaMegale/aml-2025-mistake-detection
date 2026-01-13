@@ -1,11 +1,3 @@
-"""
-Evaluate Task Graph Matching for Task Verification
-
-Extension "From Mistake Detection to Task Verification" - Substep 3
-
-Questo script valuta il modello TaskGraphMatcher sui dati di test.
-"""
-
 import argparse
 import json
 import os
@@ -16,7 +8,6 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, confusion_matrix
 
-# Import del modello
 try:
     from extension.substep3_task_graph_matching.model.task_graph_matcher import TaskGraphMatcher, TextEncoder
     from extension.substep3_task_graph_matching.train_task_graph_matching import (
@@ -65,10 +56,8 @@ def evaluate_model(model, dataloader, device, threshold=0.5):
             all_costs.extend(matching_costs.cpu().numpy().tolist())
             all_video_ids.extend(video_ids)
     
-    # Binary predictions
     all_preds = [1 if p > threshold else 0 for p in all_probs]
     
-    # Metriche
     metrics = {
         'accuracy': accuracy_score(all_labels, all_preds),
         'precision': precision_score(all_labels, all_preds, zero_division=0),
@@ -143,18 +132,15 @@ def main(args):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(f"Using device: {device}")
     
-    # Load data
     print("Loading data...")
     step_embeddings = np.load(args.npy, allow_pickle=True).item()
     annotation_map = load_step_annotations(args.annotations)
     recording_to_activity = load_recording_to_activity_mapping(args.recording_csv)
     activity_to_taskgraph = load_activity_to_taskgraph(args.activity_mapping)
     
-    # Initialize text encoder
     print("Initializing text encoder...")
     text_encoder = TextEncoder(args.text_model)
     
-    # Precompute text embeddings
     print("Precomputing task graph embeddings...")
     precomputed_text_emb = {}
     for act_id, tg_info in activity_to_taskgraph.items():
@@ -162,7 +148,6 @@ def main(args):
         _, text_emb = text_encoder.encode_task_graph(task_graph)
         precomputed_text_emb[act_id] = text_emb
     
-    # Get video IDs
     all_videos = list(step_embeddings.keys())
     
     if args.test_recipe:
@@ -174,7 +159,6 @@ def main(args):
         test_ids = all_videos
         print(f"\nEvaluating on all {len(test_ids)} videos")
     
-    # Create dataset
     test_ds = TaskGraphMatchingDataset(
         step_embeddings, test_ids, annotation_map,
         recording_to_activity, activity_to_taskgraph,
@@ -183,7 +167,6 @@ def main(args):
     
     test_loader = DataLoader(test_ds, batch_size=args.batch_size, shuffle=False, collate_fn=collate_fn)
     
-    # Load model
     print(f"\nLoading model from {args.checkpoint}...")
     
     model = TaskGraphMatcher(
@@ -199,13 +182,10 @@ def main(args):
     else:
         model.load_state_dict(checkpoint)
     
-    # Evaluate
     metrics, predictions = evaluate_model(model, test_loader, device, threshold=args.threshold)
     
-    # Print results
     print_results(metrics, predictions)
     
-    # Save results
     if args.output:
         results = {
             'metrics': metrics,

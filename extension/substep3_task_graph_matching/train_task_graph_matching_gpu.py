@@ -1,19 +1,3 @@
-"""
-Train Task Graph Matching for Task Verification - GPU Optimized
-
-Extension "From Mistake Detection to Task Verification" - Substep 3
-
-Versione ottimizzata per GPU con:
-- Mixed precision training (AMP)
-- Gradient accumulation
-- Early stopping
-- Learning rate scheduling
-- Checkpoint saving/resuming
-
-Features alignment: Le perception features (768-dim) e CLIP text embeddings (512-dim)
-condividono uno spazio allineato video-testo, essenziale per il Hungarian matching.
-"""
-
 import argparse
 import json
 import os
@@ -28,14 +12,11 @@ from torch.cuda.amp import GradScaler, autocast
 from tqdm import tqdm
 import time
 
-# Import del modello
 try:
     from extension.substep3_task_graph_matching.model.task_graph_matcher import TaskGraphMatcher, TextEncoder
 except ImportError:
     from model.task_graph_matcher import TaskGraphMatcher, TextEncoder
 
-
-# ==================== DATA LOADING ====================
 
 def load_recording_to_activity_mapping(csv_path):
     """Carica il mapping recording_id -> activity_id"""
@@ -172,8 +153,6 @@ def collate_fn(batch):
     }
 
 
-# ==================== TRAINING ====================
-
 def train_epoch(model, dataloader, optimizer, criterion, device, scaler, accumulation_steps=1):
     """Training epoch con mixed precision e gradient accumulation"""
     model.train()
@@ -263,10 +242,8 @@ def evaluate(model, dataloader, criterion, device):
         'avg_matching_cost': np.mean(all_costs)
     }
 
-# ==================== MAIN ====================
 
 def main(args):
-    # Device setup
     if torch.cuda.is_available():
         device = 'cuda'
         print(f"Using GPU: {torch.cuda.get_device_name(0)}")
@@ -277,33 +254,25 @@ def main(args):
     
     os.makedirs(args.ckpt_dir, exist_ok=True)
     
-    # Load data
     print("Loading data...")
     step_embeddings_raw = np.load(args.npy, allow_pickle=True).item()
     annotation_map = load_step_annotations(args.annotations)
     
-    # Convert HiERO format to expected format if needed
-    # HiERO format: {video_id: numpy_array [N, 768]}
-    # Expected format: {video_id: [{'embedding': array}, ...]}
     step_embeddings = {}
     for video_id, embeddings_array in step_embeddings_raw.items():
         if isinstance(embeddings_array, np.ndarray):
-            # Convert numpy array to list of dicts
             step_embeddings[video_id] = [
                 {'embedding': embeddings_array[i]} 
                 for i in range(embeddings_array.shape[0])
             ]
         else:
-            # Already in expected format
             step_embeddings[video_id] = embeddings_array
     recording_to_activity = load_recording_to_activity_mapping(args.recording_csv)
     activity_to_taskgraph = load_activity_to_taskgraph(args.activity_mapping)
     
-    # Initialize text encoder
     print("Initializing text encoder...")
     text_encoder = TextEncoder(args.text_model)
     
-    # Precompute all text embeddings
     print("Precomputing task graph embeddings...")
     precomputed_text_emb = {}
     for act_id, tg_info in activity_to_taskgraph.items():
@@ -311,7 +280,6 @@ def main(args):
         _, text_emb = text_encoder.encode_task_graph(task_graph)
         precomputed_text_emb[act_id] = text_emb
     
-    # Get all video IDs
     all_videos = list(step_embeddings.keys())
     recipes = sorted(list(set([v.split('_')[0] for v in all_videos])))
     
@@ -321,10 +289,8 @@ def main(args):
     n_errors = sum(1 for vid in all_videos if get_binary_label(vid, annotation_map) == 1.0)
     print(f"Label distribution: {n_errors} errors / {len(all_videos) - n_errors} normal")
     
-    # Mixed precision scaler
     scaler = GradScaler()
     
-    # Leave-one-recipe-out cross-validation
     print(f"\n{'='*60}")
     print("Starting Leave-One-Recipe-Out Cross-Validation (GPU)")
     print(f"{'='*60}")
@@ -343,7 +309,6 @@ def main(args):
         
         print(f"  Train: {len(train_ids)} videos, Test: {len(test_ids)} videos")
         
-        # Create datasets
         train_ds = TaskGraphMatchingDataset(
             step_embeddings, train_ids, annotation_map,
             recording_to_activity, activity_to_taskgraph,
@@ -360,7 +325,6 @@ def main(args):
             print(f"  Empty dataset, skipping...")
             continue
         
-        # DataLoaders with pin_memory for GPU
         train_loader = DataLoader(
             train_ds, batch_size=args.batch_size, shuffle=True, 
             collate_fn=collate_fn, num_workers=args.num_workers, pin_memory=True
@@ -370,7 +334,6 @@ def main(args):
             collate_fn=collate_fn, num_workers=args.num_workers, pin_memory=True
         )
         
-        # Model
         model = TaskGraphMatcher(
             visual_dim=args.visual_dim,
             text_dim=text_encoder.dim,
@@ -381,7 +344,6 @@ def main(args):
         scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
         criterion = nn.BCEWithLogitsLoss()
         
-        # Training loop with early stopping
         best_f1 = 0
         best_epoch = 0
         patience_counter = 0
@@ -409,7 +371,6 @@ def main(args):
                     best_epoch = epoch + 1
                     patience_counter = 0
                     
-                    # Save best checkpoint
                     ckpt_path = os.path.join(args.ckpt_dir, f"task_graph_matcher_recipe_{test_recipe}.pth")
                     torch.save({
                         'model_state_dict': model.state_dict(),
@@ -423,12 +384,10 @@ def main(args):
                 else:
                     patience_counter += 1
                     
-                # Early stopping
                 if args.patience > 0 and patience_counter >= args.patience:
                     print(f"  Early stopping at epoch {epoch+1}")
                     break
         
-        # Final evaluation
         final_metrics = evaluate(model, test_loader, criterion, device)
         final_metrics['recipe'] = test_recipe
         final_metrics['best_epoch'] = best_epoch
@@ -437,7 +396,6 @@ def main(args):
         
         print(f"  Best F1: {best_f1:.3f} at epoch {best_epoch}")
     
-    # Summary
     print(f"\n{'='*60}")
     print("Cross-Validation Summary")
     print(f"{'='*60}")
@@ -452,7 +410,6 @@ def main(args):
     print(f"Average Precision: {avg_prec:.3f}")
     print(f"Average Recall: {avg_rec:.3f}")
     
-    # Save results
     results_path = os.path.join(args.ckpt_dir, "cv_results.json")
     with open(results_path, 'w') as f:
         json.dump({
@@ -471,7 +428,6 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train Task Graph Matching model (GPU)")
     
-    # Data paths
     parser.add_argument('--npy', type=str, 
                         default='extension_localization/data/step_embeddings_perception.npy',
                         help='Path to perception step embeddings .npy file (768-dim)')
@@ -488,7 +444,6 @@ if __name__ == "__main__":
                         default='annotations/task_graphs',
                         help='Directory containing task graph JSON files')
     
-    # Model config
     parser.add_argument('--text_model', type=str,
                         default='clip',
                         help='Text encoder: "clip" (512-dim, aligned) or "all-MiniLM-L6-v2" (384-dim)')
@@ -497,7 +452,6 @@ if __name__ == "__main__":
     parser.add_argument('--hidden_dim', type=int, default=256,
                         help='Hidden dimension for projections')
     
-    # Training config
     parser.add_argument('--epochs', type=int, default=30)
     parser.add_argument('--batch_size', type=int, default=16,
                         help='Batch size (larger for GPU)')
@@ -508,7 +462,6 @@ if __name__ == "__main__":
     parser.add_argument('--num_workers', type=int, default=4,
                         help='DataLoader workers')
     
-    # Training options
     parser.add_argument('--eval_every', type=int, default=2,
                         help='Evaluate every N epochs')
     parser.add_argument('--patience', type=int, default=10,
@@ -520,10 +473,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     main(args)
-
-
-# Esempio di esecuzione GPU:
-# python extension/substep3_task_graph_matching/train_task_graph_matching_gpu.py --epochs 30 --batch_size 16
-
-# Con gradient accumulation (per GPU con poca memoria):
-# python extension/substep3_task_graph_matching/train_task_graph_matching_gpu.py --batch_size 8 --accumulation_steps 2

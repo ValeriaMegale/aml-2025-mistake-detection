@@ -74,19 +74,13 @@ class LSTMBaseline(nn.Module):
         # cn shape: [num_layers, batch_size, hidden_dim]
         lstm_out, (hn, cn) = self.lstm(x)
         
-        # Applica dropout dopo LSTM
         lstm_out = self.dropout_layer(lstm_out)
         
-        # Applica il fully connected layer a ogni timestep dell'output LSTM
-        # lstm_out shape: [batch_size, seq_len, hidden_dim]
-        # Reshape per applicare fc: [batch_size * seq_len, hidden_dim]
         batch_size, seq_len, hidden_dim = lstm_out.shape
         lstm_out_reshaped = lstm_out.reshape(batch_size * seq_len, hidden_dim)
         
-        # Applica il fully connected layer
-        out = self.fc(lstm_out_reshaped)  # [batch_size * seq_len, output_dim]
+        out = self.fc(lstm_out_reshaped)
         
-        # Reshape di nuovo: [batch_size, seq_len, output_dim]
         out = out.reshape(batch_size, seq_len, -1)
         
         # Se era 2D in input, rimuovi la dimensione batch per coerenza con altri modelli
